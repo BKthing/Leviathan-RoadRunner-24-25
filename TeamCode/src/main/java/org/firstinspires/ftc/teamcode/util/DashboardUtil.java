@@ -53,21 +53,67 @@ public class DashboardUtil {
     }
 
     public static void drawRobot(Canvas canvas, Pose2d pose) {
-        canvas.strokeCircle(pose.getX(), pose.getY(), ROBOT_RADIUS);
-        Vector2d v = new Vector2d(Math.cos(pose.getHeading()), (Math.sin(pose.getHeading()))).multiply(ROBOT_RADIUS);
-        double x1 = pose.getX() + v.getX() / 2, y1 = pose.getY() + v.getY() / 2;
-        double x2 = pose.getX() + v.getX(), y2 = pose.getY() + v.getY();
-        canvas.strokeLine(x1, y1, x2, y2);
+        Vector2d frontLeft = new Vector2d(8.38582, -6.35925).rotate(pose.getHeading());
+        Vector2d backLeft = new Vector2d(-8.22835, -6.35925).rotate(pose.getHeading());
+        Vector2d frontRight = new Vector2d(8.38582, 6.35925).rotate(pose.getHeading());
+        Vector2d backRight = new Vector2d(-8.22835, 6.35925).rotate(pose.getHeading());
+
+        double[] xPoints = new double[5];
+        double[] yPoints = new double[5];
+
+        xPoints[0] = pose.getX()+frontLeft.getX();
+        yPoints[0] = pose.getY()+frontLeft.getY();
+
+        xPoints[1] = pose.getX()+backLeft.getX();
+        yPoints[1] = pose.getY()+backLeft.getY();
+
+        xPoints[2] = pose.getX()+backRight.getX();
+        yPoints[2] = pose.getY()+backRight.getY();
+
+        xPoints[3] = pose.getX()+frontRight.getX();
+        yPoints[3] = pose.getY()+frontRight.getY();
+
+        xPoints[4] = pose.getX()+frontLeft.getX();
+        yPoints[4] = pose.getY()+frontLeft.getY();
+
+        canvas.strokePolyline(xPoints, yPoints);
+
+
+//        canvas.strokeLine(pose.getX()+frontLeft.getX(), pose.getY()+frontLeft.getY(), pose.getX()+backLeft.getX(), pose.getY()+backLeft.getY());
+//        canvas.strokeLine(pose.getX()+frontRight.getX(), pose.getY()+frontRight.getY(), pose.getX()+backRight.getX(), pose.getY()+backRight.getY());
+//
+//        canvas.strokeLine(pose.getX()+frontLeft.getX(), pose.getY()+frontLeft.getY(), pose.getX()+frontRight.getX(), pose.getY()+frontRight.getY());
+//        canvas.strokeLine(pose.getX()+backLeft.getX(), pose.getY()+backLeft.getY(), pose.getX()+backRight.getX(), pose.getY()+backRight.getY());
+
     }
 
-    public static void drawRobotWithIntake(Canvas canvas, Pose2d pose, Pose2d intakePos) {
-        canvas.strokeCircle(pose.getX(), pose.getY(), ROBOT_RADIUS);
-        Vector2d v = new Vector2d(Math.cos(pose.getHeading()), (Math.sin(pose.getHeading()))).multiply(ROBOT_RADIUS);
-        double x1 = pose.getX() + v.getX() / 2, y1 = pose.getY() + v.getY() / 2;
-        double x2 = pose.getX() + v.getX(), y2 = pose.getY() + v.getY();
-        canvas.strokeLine(x1, y1, x2, y2);
+    public static void drawIntake(Canvas canvas, Pose2d pose, double intakeDistance) {
+        Vector2d frontLeft = new Vector2d(8.38582, -4.7).rotate(pose.getHeading());
+        Vector2d intakeLeft = new Vector2d(8.38582+intakeDistance, -4.7).rotate(pose.getHeading());
+        Vector2d frontRight = new Vector2d(8.38582, 4.7).rotate(pose.getHeading());
+        Vector2d intakeRight = new Vector2d(8.38582+intakeDistance, 4.7).rotate(pose.getHeading());
 
-        canvas.strokeLine(pose.getX(), pose.getY(), intakePos.getX(), intakePos.getY());
+        double[] xPoints = new double[4];
+        double[] yPoints = new double[4];
+
+        xPoints[0] = pose.getX()+frontLeft.getX();
+        yPoints[0] = pose.getY()+frontLeft.getY();
+
+        xPoints[1] = pose.getX()+intakeLeft.getX();
+        yPoints[1] = pose.getY()+intakeLeft.getY();
+
+        xPoints[2] = pose.getX()+intakeRight.getX();
+        yPoints[2] = pose.getY()+intakeRight.getY();
+
+        xPoints[3] = pose.getX()+frontRight.getX();
+        yPoints[3] = pose.getY()+frontRight.getY();
+
+        canvas.strokePolyline(xPoints, yPoints);
+
+//        canvas.strokeLine(pose.getX()+frontLeft.getX(), pose.getY()+frontLeft.getY(), pose.getX()+intakeLeft.getX(), pose.getY()+intakeLeft.getY());
+//        canvas.strokeLine(pose.getX()+frontRight.getX(), pose.getY()+frontRight.getY(), pose.getX()+intakeRight.getX(), pose.getY()+intakeRight.getY());
+//        canvas.strokeLine(pose.getX()+intakeRight.getX(), pose.getY()+intakeRight.getY(), pose.getX()+intakeLeft.getX(), pose.getY()+intakeLeft.getY());
+
     }
 
     public static void drawArrow(Canvas canvas, Vector2d start, Vector2d end) {

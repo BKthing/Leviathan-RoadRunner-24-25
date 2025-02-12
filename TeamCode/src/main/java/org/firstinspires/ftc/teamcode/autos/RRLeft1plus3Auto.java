@@ -44,8 +44,6 @@ public class RRLeft1plus3Auto extends LinearOpMode {
 
     private TouchSensor breakBeam;
 
-    private DcMotorEx perpendicularWheel, parallelWheel;
-
     double extensionDistance = 0;
 
     private final ElapsedTimer loopTimer = new ElapsedTimer();
@@ -58,10 +56,7 @@ public class RRLeft1plus3Auto extends LinearOpMode {
 
         masterThread = new MasterThread(hardwareMap, telemetry, gamepad1, gamepad2);
 
-        perpendicularWheel = hardwareMap.get(DcMotorEx.class, "verticalRight");
-        parallelWheel = hardwareMap.get(DcMotorEx.class, "bl");
-
-        drivetrain = new NewDrivetrain(masterThread.getData(), parallelWheel, perpendicularWheel);
+        drivetrain = new NewDrivetrain(masterThread.getData(), intake);
         drivetrain.setDriveState(NewDrivetrain.DriveState.FOLLOW_PATH);
 
         horizontalSlideEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, "horizontalLeft"));

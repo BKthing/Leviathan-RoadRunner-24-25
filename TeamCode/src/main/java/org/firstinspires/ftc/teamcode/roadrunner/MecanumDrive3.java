@@ -45,6 +45,8 @@ import org.firstinspires.ftc.teamcode.roadrunner.messages.DriveCommandMessage;
 import org.firstinspires.ftc.teamcode.roadrunner.messages.MecanumCommandMessage;
 import org.firstinspires.ftc.teamcode.roadrunner.messages.MecanumLocalizerInputsMessage;
 import org.firstinspires.ftc.teamcode.roadrunner.messages.PoseMessage;
+import org.firstinspires.ftc.teamcode.util.DashboardUtil;
+import org.firstinspires.ftc.teamcode.util.MathUtil;
 
 import java.lang.Math;
 import java.util.ArrayList;
@@ -270,21 +272,6 @@ public  class MecanumDrive3 {
         this.voltage = voltage;
     }
 
-//    public void setDrivePowers(PoseVelocity2d powers) {
-//        MecanumKinematics.WheelVelocities<Time> wheelVels = new MecanumKinematics(1).inverse(
-//                PoseVelocity2dDual.constant(powers, 1));
-//
-//        double maxPowerMag = 1;
-//        for (DualNum<Time> power : wheelVels.all()) {
-//            maxPowerMag = Math.max(maxPowerMag, power.value());
-//        }
-//
-//        leftFront.setPower(wheelVels.leftFront.get(0) / maxPowerMag);
-//        leftBack.setPower(wheelVels.leftBack.get(0) / maxPowerMag);
-//        rightBack.setPower(wheelVels.rightBack.get(0) / maxPowerMag);
-//        rightFront.setPower(wheelVels.rightFront.get(0) / maxPowerMag);
-//    }
-
     public final class FollowTrajectoryAction implements Action {
         public final TimeTrajectory timeTrajectory;
         private double beginTs = -1;
@@ -319,10 +306,6 @@ public  class MecanumDrive3 {
             if (t >= timeTrajectory.duration) {
 
                 motorPowers = Arrays.asList(0.0, 0.0, 0.0, 0.0);
-//                leftFront.setPower(0);
-//                leftBack.setPower(0);
-//                rightBack.setPower(0);
-//                rightFront.setPower(0);
 
                 return false;
             }
@@ -340,7 +323,6 @@ public  class MecanumDrive3 {
             driveCommandWriter.write(new DriveCommandMessage(command));
 
             MecanumKinematics.WheelVelocities<Time> wheelVels = kinematics.inverse(command);
-//            double voltage = voltageSensor.getVoltage();
 
             final MotorFeedforward feedforward = new MotorFeedforward(PARAMS.kS,
                     PARAMS.kV / PARAMS.inPerTick, PARAMS.kA / PARAMS.inPerTick);
@@ -369,10 +351,10 @@ public  class MecanumDrive3 {
             drawPoseHistory(c);
 
             c.setStroke("#4CAF50");
-            Drawing.drawRobot(c, txWorldTarget.value());
+            DashboardUtil.drawRobot(c, MathUtil.toReefSharkPose(txWorldTarget.value()));
 
-            c.setStroke("#3F51B5");
-            Drawing.drawRobot(c, pose);
+//            c.setStroke("#3F51B5");
+//            DashboardUtil.drawRobot(c, MathUtil.toReefSharkPose(pose));
 
             c.setStroke("#4CAF50FF");
             c.setStrokeWidth(1);
@@ -443,10 +425,10 @@ public  class MecanumDrive3 {
             drawPoseHistory(c);
 
             c.setStroke("#4CAF50");
-            Drawing.drawRobot(c, txWorldTarget.value());
+            DashboardUtil.drawRobot(c, MathUtil.toReefSharkPose(txWorldTarget.value()));
 
-            c.setStroke("#3F51B5");
-            Drawing.drawRobot(c, pose);
+//            c.setStroke("#3F51B5");
+//            DashboardUtil.drawRobot(c, MathUtil.toReefSharkPose(pose));
 
             c.setStroke("#7C4DFFFF");
             c.fillCircle(turn.beginPose.position.x, turn.beginPose.position.y, 2);

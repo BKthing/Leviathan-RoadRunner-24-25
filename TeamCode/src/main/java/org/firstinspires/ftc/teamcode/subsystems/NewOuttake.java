@@ -113,7 +113,7 @@ public class NewOuttake extends SubSystem {
         SPECIMEN_PICKUP(3.55),
         CLEAR_SPECIMEN_BAR(6.6),
         SPECIMEN_BAR(8),
-        PLACE_SPECIMEN_BAR(13.15),
+        PLACE_SPECIMEN_BAR(13.3),
         HANG_HEIGHT(21),
         LOW_BUCKET_HEIGHT(20),
         HIGH_BUCKET(19.5),
@@ -158,7 +158,7 @@ public class NewOuttake extends SubSystem {
     private double voltage = 13;
 
     public enum V4BarPos {
-        PLACE_FRONT(.33 - .042),
+        PLACE_FRONT(.34 - .042),
         CLEAR_FRONT_BAR(.29 - .042),
 //        WAIT_FOR_TRANSFER(.35),
         RELEASE_HANG_HOOKS(.53 - .042),
@@ -186,7 +186,7 @@ public class NewOuttake extends SubSystem {
 
 
     public enum ClawPitch {
-        DOWN(.39 - .019),
+        DOWN(.37 - .019),
         BACK(0.09 - .019),
         BACK_ANGLED_DOWN(.19 - .019),
         BACK2(1 - .019),

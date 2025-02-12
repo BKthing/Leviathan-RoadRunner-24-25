@@ -17,7 +17,7 @@ import org.openftc.easyopencv.OpenCvPipeline;
 
 import org.firstinspires.ftc.teamcode.util.MathUtil;
 
-public class TestOpenCV extends OpenCvPipeline {
+public class VectorFieldIntakePipeline extends OpenCvPipeline {
 
     public enum DisplayType {
         COLOR_FILTER,
@@ -77,7 +77,7 @@ public class TestOpenCV extends OpenCvPipeline {
             red = new Scalar(255, 0, 0),
             yellow = new Scalar(255, 255, 0);
 
-    public TestOpenCV() {
+    public VectorFieldIntakePipeline() {
         int fadeRange = 50/2;
 
         for (int i = 0; i < cameraRows; i++) {

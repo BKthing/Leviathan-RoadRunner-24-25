@@ -960,6 +960,6 @@ public class NewIntake extends SubSystem {
     }
 
     public double getActualSlidePos() {
-        return actualIntakePos;
+        return slidePos;
     }
 }

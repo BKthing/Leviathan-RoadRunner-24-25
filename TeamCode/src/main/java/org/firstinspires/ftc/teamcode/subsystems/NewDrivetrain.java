@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
+import static org.firstinspires.ftc.teamcode.util.MathUtil.robotToIntakePos;
+
 import com.acmerobotics.dashboard.canvas.Canvas;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
@@ -86,6 +88,8 @@ public class NewDrivetrain extends SubSystem {
 
     private final Telemetry.Item roadRunnerPos;
     private final Telemetry.Item roadRunnerVel;
+
+    private final NewIntake intake;
 //    private final Telemetry.Item driveTrainLoopTime;
 
 //    private final ElapsedTimer driveTrainLoopTimer = new ElapsedTimer();
@@ -93,23 +97,16 @@ public class NewDrivetrain extends SubSystem {
     private final ElapsedTimer voltageUpdateTimer = new ElapsedTimer();
 
 
-//    public final Localizer roadRunnerLocalizer;
-
-//    public final GoBildaPinpointDriverRR pinpointLocalizer;
-
-//    public com.acmerobotics.roadrunner.Pose2d roadRunnerPose = new com.acmerobotics.roadrunner.Pose2d(0, 0, 0);
-
-
-    public NewDrivetrain(SubSystemData data, DcMotorEx parallelEncoder, DcMotorEx perpendicularEncoder) {
-        this(data, parallelEncoder, perpendicularEncoder, DriveState.FOLLOW_PATH);
+    public NewDrivetrain(SubSystemData data, NewIntake intake) {
+        this(data, DriveState.FOLLOW_PATH, intake);
     }
 
-    public NewDrivetrain(SubSystemData data, DcMotorEx parallelEncoder, DcMotorEx perpendicularEncoder, DriveState driveState) {
+    public NewDrivetrain(SubSystemData data, DriveState driveState, NewIntake intake) {
         super(data);
 
-//        this.localizer = localizer;
-
         this.driveState = driveState;
+
+        this.intake = intake;
 
 
         this.motorActions = Arrays.asList(new ReusableHardwareAction(hardwareQueue), new ReusableHardwareAction(hardwareQueue), new ReusableHardwareAction(hardwareQueue), new ReusableHardwareAction(hardwareQueue));
@@ -224,7 +221,9 @@ public class NewDrivetrain extends SubSystem {
                 break;
             case DRIVER_CONTROL:
                 followState.setValue("DRIVER");
-//                drive.updatePoseEstimate();
+
+                drive.updatePoseEstimate();
+
                 double relativeHeading = roadRunnerPoseEstimate.getHeading()-headingOffset;
 
                 double speedMultiplier = 1- gamepad1.right_trigger*.7;
@@ -297,12 +296,11 @@ public class NewDrivetrain extends SubSystem {
             packet.fieldOverlay().setStrokeWidth(1);
             packet.fieldOverlay().setStroke("#b33fb5");
 //            DashboardUtil.drawFullPoseHistory(packet.fieldOverlay(), localizer.getPoseHistory());
-            DashboardUtil.drawRobot(packet.fieldOverlay(), roadRunnerPoseEstimate);
+//            DashboardUtil.drawRobot(packet.fieldOverlay(), roadRunnerPoseEstimate);
 
             //draws the last 200 points the robot was at
 
             packet.fieldOverlay().setStroke("#3F51B5");
-
 
             //draws the robots current position
 
@@ -312,6 +310,13 @@ public class NewDrivetrain extends SubSystem {
             DashboardUtil.drawArrow(packet.fieldOverlay(), roadRunnerPoseEstimate.getVector2d(), roadRunnerPoseEstimate.getVector2d().plus(robotVelocity));
 
         }
+
+            packet.fieldOverlay().setStroke("#0a0a0f");//black
+            DashboardUtil.drawIntake(packet.fieldOverlay(), roadRunnerPoseEstimate, intake.getActualSlidePos());
+
+
+            packet.fieldOverlay().setStroke("#3F51B5");//blue
+            DashboardUtil.drawRobot(packet.fieldOverlay(), roadRunnerPoseEstimate);
 
         return packet;
     }
@@ -357,5 +362,9 @@ public class NewDrivetrain extends SubSystem {
 
     public Pose2d getPoseEstimate() {
         return roadRunnerPoseEstimate;
+    }
+
+    public Pose2d getIntakePoseEstimate() {
+        return robotToIntakePos(roadRunnerPoseEstimate, intake.getActualSlidePos()+8.38582);
     }
 }

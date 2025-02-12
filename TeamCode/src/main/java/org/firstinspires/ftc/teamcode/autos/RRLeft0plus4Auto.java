@@ -42,8 +42,6 @@ public class RRLeft0plus4Auto extends LinearOpMode {
 
     private TouchSensor breakBeam;
 
-    private DcMotorEx perpendicularWheel, parallelWheel;
-
     double extensionDistance = 0;
 
     private final ElapsedTimer loopTimer = new ElapsedTimer();
@@ -61,7 +59,7 @@ public class RRLeft0plus4Auto extends LinearOpMode {
         perpendicularWheel = hardwareMap.get(DcMotorEx.class, "verticalRight");
         parallelWheel = hardwareMap.get(DcMotorEx.class, "bl");
 
-        drivetrain = new NewDrivetrain(masterThread.getData(), parallelWheel, perpendicularWheel);
+        drivetrain = new NewDrivetrain(masterThread.getData(), intake);
         drivetrain.setDriveState(NewDrivetrain.DriveState.FOLLOW_PATH);
 
         horizontalSlideEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, "horizontalLeft"));

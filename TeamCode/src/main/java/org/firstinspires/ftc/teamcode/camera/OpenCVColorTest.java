@@ -19,10 +19,10 @@ public class OpenCVColorTest extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         OpenCvCamera webcam;
 
-        TestOpenCV pipeline = new TestOpenCV();
+        VectorFieldIntakePipeline pipeline = new VectorFieldIntakePipeline();
 
         pipeline.setBlueAlliance(true);
-        pipeline.setDisplayType(TestOpenCV.DisplayType.COLOR_FILTER);
+        pipeline.setDisplayType(VectorFieldIntakePipeline.DisplayType.COLOR_FILTER);
         // copy and pasted from last year's code, im not sure what "robot" or "hwMap" is this yr
         webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "camera"));
         webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {

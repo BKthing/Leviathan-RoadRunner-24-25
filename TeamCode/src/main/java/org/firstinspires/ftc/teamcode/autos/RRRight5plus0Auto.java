@@ -46,9 +46,6 @@ public class RRRight5plus0Auto extends LinearOpMode {
 
     private TouchSensor breakBeam;
 
-    private DcMotorEx perpendicularWheel, parallelWheel;
-
-
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -57,10 +54,7 @@ public class RRRight5plus0Auto extends LinearOpMode {
 
         masterThread = new MasterThread(hardwareMap, telemetry, gamepad1, gamepad2);
 
-        perpendicularWheel = hardwareMap.get(DcMotorEx.class, "verticalRight");
-        parallelWheel = hardwareMap.get(DcMotorEx.class, "bl");
-
-        drivetrain = new NewDrivetrain(masterThread.getData(), parallelWheel, perpendicularWheel);
+        drivetrain = new NewDrivetrain(masterThread.getData(), intake);
         drivetrain.setDriveState(NewDrivetrain.DriveState.FOLLOW_PATH);
 
         horizontalSlideEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, "horizontalLeft"));
