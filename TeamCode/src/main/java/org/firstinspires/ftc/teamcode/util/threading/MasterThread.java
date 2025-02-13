@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.util.threading;
 
+import androidx.annotation.NonNull;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
@@ -16,7 +18,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.firstinspires.ftc.teamcode.subsystems.SubSystem;
 
@@ -104,16 +109,50 @@ public class MasterThread {
         threadUpdateTimer.reset();
 
         for (SubSystem subSystem: subSystems) {
-            subSystem.priorityData();
-//            subSystem.loop();
+            try {
+                Thread thread = new Thread( () -> {
+                    try {
+                        Thread.sleep(1000);
+
+                        throw new RuntimeException("Subsystem priorityData got stuck " + subSystem);
+                    } catch (InterruptedException e) {
+                    }
+                });
+                thread.start();
+
+                subSystem.priorityData();
+
+                thread.interrupt();
+                thread.join(1000);
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new RuntimeException("Subsystem priorityData got stuck " + subSystem);
+            }
         }
 
         threadUpdateTime.setValue(threadUpdateTimer.milliSeconds());
 
 
         for (SubSystem subSystem: subSystems) {
-//            subSystem.priorityData();
-            subSystem.loop();
+            try {
+                Thread thread = new Thread( () -> {
+                    try {
+                        Thread.sleep(1000);
+
+                        throw new RuntimeException("Subsystem loop got stuck " + subSystem);
+                    } catch (InterruptedException e) {
+                    }
+                });
+                thread.start();
+
+                subSystem.loop();
+
+                thread.interrupt();
+                thread.join(1000);
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new RuntimeException("Subsystem loop got stuck " + subSystem);
+            }
         }
 
 

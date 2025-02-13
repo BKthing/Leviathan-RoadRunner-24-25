@@ -17,6 +17,8 @@ import org.openftc.easyopencv.OpenCvPipeline;
 
 import org.firstinspires.ftc.teamcode.util.MathUtil;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class VectorFieldIntakePipeline extends OpenCvPipeline {
 
     public enum DisplayType {
@@ -71,6 +73,11 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
 
     Vector2d intakePoint = new Vector2d(cameraColumns/2, cameraRows/2);
 
+    private Vector2d targetBlockPixels = new Vector2d(0, 0);
+
+    public AtomicBoolean hasSample = new AtomicBoolean();
+
+    private boolean hasSampleValue = false;
 
     private final Scalar
             blue = new Scalar(0, 0, 255),
@@ -78,11 +85,13 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
             yellow = new Scalar(255, 255, 0);
 
     public VectorFieldIntakePipeline() {
-        int fadeRange = 50/2;
+//        int fadeRange = 50/2;
+//
+//        for (int i = 0; i < cameraRows; i++) {
+//
+//        }
 
-        for (int i = 0; i < cameraRows; i++) {
-
-        }
+        hasSample.set(false);
 
     }
 
@@ -90,11 +99,13 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
     //bgr
     @Override
     public Mat processFrame(Mat input) {
-//        try {
+        try {
             return process(input);
-//        } catch (Exception e) {
-//            throw new RuntimeException(e);
-//        }
+        } catch (Exception e) {
+            e.printStackTrace();
+
+            throw new RuntimeException(e);
+        }
     }
 
     private Mat process(Mat input) {
@@ -180,11 +191,25 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
                 //                blockVectorField.convertTo(output, COLOR_GRAY2BGR);
                 intakePoint = searchField(blockVectorField, intakePoint, 32);
 
+                if (safeGetMat(blockPullVectorField, intakePoint.getX(), intakePoint.getY()) < 140) {
+                    intakePoint = searchField(blockVectorField, new Vector2d(cameraColumns/2, cameraRows/2), 32);
+                }
+
                 int halfWidth = 20;
                 int halfHeight = 20;
 
                 //                Imgproc.rectangle(output, new Rect((int) intakePoint.getX(), (int) intakePoint.getY(), 1, 1), blue, 3);
                 Imgproc.rectangle(output, new Rect ((int) MathUtil.clip((int) intakePoint.getX() - halfWidth, 0, cameraColumns), (int) MathUtil.clip((int) intakePoint.getY() - halfHeight, 0, cameraRows), halfWidth * 2, halfHeight * 2), blue, 3);
+
+                setTargetBlockPixels(intakePoint);
+
+                boolean newHasSample = safeGetMat(blockPullVectorField, intakePoint.getX(), intakePoint.getY())>150;
+
+                if (newHasSample != hasSampleValue) {
+                    hasSampleValue = newHasSample;
+                    hasSample.set(hasSampleValue);
+                }
+
                 break;
             case COMBINED_VECTOR_FIELD:
 
@@ -235,5 +260,13 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public synchronized void setTargetBlockPixels(Vector2d vector2d) {
+        targetBlockPixels = vector2d;
+    }
+
+    public synchronized Vector2d getTargetBlockPixels() {
+        return targetBlockPixels;
     }
 }

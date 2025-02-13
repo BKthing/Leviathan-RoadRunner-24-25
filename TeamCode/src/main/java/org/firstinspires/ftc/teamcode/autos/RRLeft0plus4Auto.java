@@ -56,9 +56,6 @@ public class RRLeft0plus4Auto extends LinearOpMode {
 
         masterThread = new MasterThread(hardwareMap, telemetry, gamepad1, gamepad2);
 
-        perpendicularWheel = hardwareMap.get(DcMotorEx.class, "verticalRight");
-        parallelWheel = hardwareMap.get(DcMotorEx.class, "bl");
-
         drivetrain = new NewDrivetrain(masterThread.getData(), intake);
         drivetrain.setDriveState(NewDrivetrain.DriveState.FOLLOW_PATH);
 

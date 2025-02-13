@@ -1,13 +1,14 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
-import static org.firstinspires.ftc.teamcode.util.MathUtil.robotToIntakePos;
 import static org.firstinspires.ftc.teamcode.util.RobotConstants.cameraColumns;
 import static org.firstinspires.ftc.teamcode.util.RobotConstants.cameraRows;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.reefsharklibrary.data.Pose2d;
+import com.reefsharklibrary.data.Vector2d;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.camera.VectorFieldIntakePipeline;
 import org.firstinspires.ftc.teamcode.util.DashboardUtil;
@@ -24,7 +25,15 @@ public class VisionSubsystem extends SubSystem {
 
     private Pose2d intakePose = new Pose2d(0, 0, 0);
 
+    private Vector2d targetSamplePose = new Vector2d(0, 0);
+
+    private Pose2d targetRobotPose = new Pose2d(0, 0, 0);
+
+    private double intakeHeight = 0;
+
     private Boolean blueAlliance;
+
+    private final Telemetry.Item visionsTelem;
 
 
 
@@ -54,29 +63,74 @@ public class VisionSubsystem extends SubSystem {
             }
         });
 
+        visionsTelem = telemetry.addData("Camera", 0);
+
     }
 
     @Override
     public void priorityData() {
         intakePose = drivetrain.getIntakePoseEstimate();
+        intakeHeight = drivetrain.getIntakeY();
     }
 
     @Override
     public void loop() {
+        Vector2d relCords = pixelToRelFieldCords(pipeline.getTargetBlockPixels());
+
+        targetSamplePose = intakePose.getVector2d().plus(relCords.rotate(intakePose.getHeading()));
+
+        visionsTelem.setValue(relCords.getX() + " angle: " + relCords.getY());
+
+        targetRobotPose = drivetrain.getPoseEstimate().getVector2d().toPose(targetSamplePose.minus(drivetrain.getPoseEstimate().getVector2d()).getDirection());
 
     }
 
     @Override
     public TelemetryPacket dashboard(TelemetryPacket packet) {
-//        packet.fieldOverlay().setStrokeWidth(1);
+
+
+        packet.fieldOverlay().setStrokeWidth(1);
 //
-//        packet.fieldOverlay().setStroke("#0a0a0f");//black
+        packet.fieldOverlay().setStroke("#FFDE21");//yellow
+
+        DashboardUtil.drawMarker(packet.fieldOverlay(), targetSamplePose, true);
 //        DashboardUtil.drawIntake(packet.fieldOverlay(), robotPos, slidePos);
 //
 //
 //        packet.fieldOverlay().setStroke("#3F51B5");//blue
 //        DashboardUtil.drawRobot(packet.fieldOverlay(), robotPos);
 
+        packet.fieldOverlay().setStroke("#4CAF50");//green
+
+
+        DashboardUtil.drawRobot(packet.fieldOverlay(), targetRobotPose);
+
+
         return packet;
+    }
+
+    private Vector2d pixelToRelFieldCords(Vector2d targetBlockPixels) {
+        double horizontalAngle = Math.toRadians(((targetBlockPixels.getY()-cameraRows/2)/cameraRows)*60.45786);
+        double verticalAngle = Math.toRadians(((cameraColumns/2-targetBlockPixels.getX())/cameraColumns)*44.36924 + 30.87+6);
+
+        double xOffset = Math.tan(verticalAngle)*(intakeHeight-1)+1;
+
+        double hypotonus = Math.sqrt(xOffset*xOffset+(intakeHeight-1)*(intakeHeight-1));
+
+        double yOffset = Math.tan(horizontalAngle)*hypotonus;
+//        double xOffset =
+        return new Vector2d(xOffset, yOffset);
+    }
+
+    public boolean hasSample() {
+        return pipeline.hasSample.get();
+    }
+
+    public Vector2d getTargetSamplePose() {
+        return targetSamplePose;
+    }
+
+    public Pose2d getTargetRobotPose() {
+        return targetRobotPose;
     }
 }

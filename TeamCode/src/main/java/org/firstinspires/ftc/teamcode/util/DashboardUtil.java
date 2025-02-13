@@ -89,9 +89,9 @@ public class DashboardUtil {
 
     public static void drawIntake(Canvas canvas, Pose2d pose, double intakeDistance) {
         Vector2d frontLeft = new Vector2d(8.38582, -4.7).rotate(pose.getHeading());
-        Vector2d intakeLeft = new Vector2d(8.38582+intakeDistance, -4.7).rotate(pose.getHeading());
+        Vector2d intakeLeft = new Vector2d(intakeDistance, -4.7).rotate(pose.getHeading());
         Vector2d frontRight = new Vector2d(8.38582, 4.7).rotate(pose.getHeading());
-        Vector2d intakeRight = new Vector2d(8.38582+intakeDistance, 4.7).rotate(pose.getHeading());
+        Vector2d intakeRight = new Vector2d(intakeDistance, 4.7).rotate(pose.getHeading());
 
         double[] xPoints = new double[4];
         double[] yPoints = new double[4];

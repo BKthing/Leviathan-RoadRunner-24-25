@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
 import static org.firstinspires.ftc.teamcode.util.MathUtil.robotToIntakePos;
+import static org.firstinspires.ftc.teamcode.util.MathUtil.toReefSharkPose;
 
 import com.acmerobotics.dashboard.canvas.Canvas;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
@@ -14,9 +15,11 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.reefsharklibrary.data.MotorPowers;
+import com.reefsharklibrary.data.PIDCoeficients;
 import com.reefsharklibrary.data.Pose2d;
 import com.reefsharklibrary.data.Vector2d;
 import com.reefsharklibrary.misc.ElapsedTimer;
+import com.reefsharklibrary.pathing.PIDPointController;
 import com.reefsharklibrary.robotControl.ReusableHardwareAction;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -24,6 +27,7 @@ import org.firstinspires.ftc.teamcode.roadrunner.MecanumDrive2;
 import org.firstinspires.ftc.teamcode.roadrunner.MecanumDrive3;
 import org.firstinspires.ftc.teamcode.roadrunner.PinpointDrive;
 import org.firstinspires.ftc.teamcode.util.DashboardUtil;
+import org.firstinspires.ftc.teamcode.util.RobotConstants;
 import org.firstinspires.ftc.teamcode.util.threading.SubSystemData;
 
 import java.util.Arrays;
@@ -96,6 +100,14 @@ public class NewDrivetrain extends SubSystem {
 
     private final ElapsedTimer voltageUpdateTimer = new ElapsedTimer();
 
+    double intakeDistance = 0;
+
+    double intakeY = 0;
+
+    private PIDPointController pidPointController;
+
+    private Pose2d targetHoldPoint = new Pose2d(0, 0, 0);
+    private boolean holdPoint = false;
 
     public NewDrivetrain(SubSystemData data, NewIntake intake) {
         this(data, DriveState.FOLLOW_PATH, intake);
@@ -128,24 +140,9 @@ public class NewDrivetrain extends SubSystem {
 
         drivetrainMotors = Arrays.asList(frontLeft, backLeft, backRight, frontRight);
 
-//        lazyImu = new LazyImu(hardwareMap, "expansionImu", new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.UP, RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD));
-
-//        roadRunnerLocalizer = new TwoDeadWheelLocalizer(hardwareMap, lazyImu.get(), parallelEncoder, perpendicularEncoder, .94*2*Math.PI/2000);
-
-
-//        pinpointLocalizer = hardwareMap.get(GoBildaPinpointDriverRR.class, "pinpoint");
-//
-//
-//        pinpointLocalizer.setEncoderResolution(GoBildaPinpointDriverRR.goBILDA_SWINGARM_POD);
-//        pinpointLocalizer.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.FORWARD);
-//        pinpointLocalizer.setOffsets(-78.2, -120.7);
         this.drive = new PinpointDrive(hardwareMap, new com.acmerobotics.roadrunner.Pose2d(0, 0, 0));
-//        frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-//        frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-//        backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-//        backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
-//        pinpointLocalizer.resetPosAndIMU();
+        pidPointController = new PIDPointController(RobotConstants.lateralPID, RobotConstants.headingPID, RobotConstants.trackWidth, RobotConstants.f);
 
         batteryVoltageSensor = hardwareMap.voltageSensor.iterator().next();
 
@@ -177,24 +174,33 @@ public class NewDrivetrain extends SubSystem {
 
         drive.setVoltage(voltage);
 
-//        pinpointLocalizer.update();
+        //intake servo rotates by 92.804273
+        //intake bar rotates by 124
+        //300 deg from 0 to 1
+        //servo deg to intake deg 1.336145373
+        //servo.setPos val to intake deg 400.8436119
+        //-3.14961*Math.cos((1-intake.getActualIntakePos())*400.8436119)
 
-//        Twist2dDual<Time> twist = ;
+        double intakeOffset;
 
-//        roadRunnerPose = pinpointLocalizer.getPositionRR();//MathUtil.toRoadRunnerPose(poseEstimate);//
+        if (intake.getActualIntakePos() == NewIntake.IntakePos.UP.pos) {
+            intakeOffset = -.5;
+            intakeY = 8.5;
+        } else {// if (intake.getActualIntakePos() == NewIntake.IntakePos.DOWN.pos) {
+            intakeOffset = 2.375;
+            intakeY = 4.125;
+        }
+
+        intakeDistance = intake.getActualSlidePos()+9.59029 + intakeOffset;
+
+//        intakeDistance = 9.59029;
 
         roadRunnerPoseEstimate = new Pose2d(drive.pose.position.x, drive.pose.position.y, drive.pose.heading.toDouble());
 
-//        PoseVelocity2d velocity = ;
-
-//        roadRunnerPoseVelocity = new Pose2d(velocity.linearVel.x, velocity.linearVel.y, velocity.angVel);
 
         roadRunnerPos.setValue(roadRunnerPoseEstimate);
         roadRunnerVel.setValue(roadRunnerPoseVelocity);
 
-//        drive.updatePoseEstimate();
-
-//        drive.updatePoseEstimate(roadRunnerPose, pinpointLocalizer.getVelocityRR());
 
         if (voltageUpdateTimer.milliSeconds()>200) {
             voltageSensorHardwareAction.setAndQueueIfEmpty(() -> {
@@ -216,6 +222,15 @@ public class NewDrivetrain extends SubSystem {
 
                     setDrivePower(drive.getDrivePowers());
                     followState.setValue("FOLLOW");
+                } else {
+                    drive.updatePoseEstimate();
+                    roadRunnerPoseEstimate = new Pose2d(drive.pose.position.x, drive.pose.position.y, drive.pose.heading.toDouble());
+
+                    if (holdPoint) {
+                        MotorPowers motorPowers = new MotorPowers();
+                        pidPointController.calculatePowers(roadRunnerPoseEstimate, roadRunnerPoseVelocity, targetHoldPoint, motorPowers);
+                        setDrivePower(motorPowers.getNormalizedVoltages(voltage));
+                    }
                 }
 
                 break;
@@ -311,8 +326,17 @@ public class NewDrivetrain extends SubSystem {
 
         }
 
+        packet.fieldOverlay().setStrokeWidth(1);
+
+//        packet.fieldOverlay().setStroke("#0a0a0f");//black
+//        DashboardUtil.drawIntake(packet.fieldOverlay(), robotPos, slidePos);
+//
+//
+//        packet.fieldOverlay().setStroke("#3F51B5");//blue
+//        DashboardUtil.drawRobot(packet.fieldOverlay(), robotPos);
+
             packet.fieldOverlay().setStroke("#0a0a0f");//black
-            DashboardUtil.drawIntake(packet.fieldOverlay(), roadRunnerPoseEstimate, intake.getActualSlidePos());
+            DashboardUtil.drawIntake(packet.fieldOverlay(), roadRunnerPoseEstimate, intakeDistance);
 
 
             packet.fieldOverlay().setStroke("#3F51B5");//blue
@@ -365,6 +389,24 @@ public class NewDrivetrain extends SubSystem {
     }
 
     public Pose2d getIntakePoseEstimate() {
-        return robotToIntakePos(roadRunnerPoseEstimate, intake.getActualSlidePos()+8.38582);
+        return robotToIntakePos(roadRunnerPoseEstimate != null ? roadRunnerPoseEstimate : new Pose2d(0, 0, 0), intakeDistance);
+    }
+
+    public double getIntakeY() {
+        return intakeY;
+    }
+
+    public void holdPoint(Pose2d targetHoldPoint) {
+        this.targetHoldPoint = targetHoldPoint;
+        holdPoint = true;
+    }
+
+    public void holdPoint() {
+        holdPoint = true;
+    }
+
+    public void cancelHoldPoint() {
+        holdPoint = false;
+        setDrivePower(Arrays.asList(0.0, 0.0, 0.0, 0.0));
     }
 }

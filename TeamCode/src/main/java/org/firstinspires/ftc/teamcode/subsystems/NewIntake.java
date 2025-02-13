@@ -136,8 +136,8 @@ public class NewIntake extends SubSystem {
 
     public enum HorizontalSlide {
         //18.9 max
-        EXTRA_IN(-1.5),
-        IN(-1),
+        EXTRA_IN(-1),
+        IN(-.5),
         AUTO_PRESET1(13.5),
         AUTO_PRESET2(4),
         CLOSE(7),
@@ -152,7 +152,7 @@ public class NewIntake extends SubSystem {
     private double newTargetSlidePos;
     private boolean changedTargetSlidePos = false;
 
-    private double slidePos;//inches
+    private double slidePos = 0;//inches
     private double prevSlideError = 0;
 
 
@@ -170,7 +170,7 @@ public class NewIntake extends SubSystem {
         UP(.75),//.69
         AUTO_HEIGHT(.55),//.1),
         PARTIAL_UP(.5),//.11),
-        DOWN(.37);//.16);//.05
+        DOWN(.39);//.16);//.05
 
         public final double pos;
         IntakePos(double pos) {this.pos = pos;}
@@ -523,15 +523,15 @@ public class NewIntake extends SubSystem {
             //Slides set to max power
             p = Math.signum(error);
         } else {//if (error<4 but error>.1)
-            p = error*.32;//.35;
+            p = error*.35;//.35;
             d = ((prevSlideError-error) / elapsedTime) * .023;//.03;//.007
-            f=Math.signum(error)*0.24;//.15;
+            f=Math.signum(error)*0.15;//.15;
         }
 
 //        p = 0;
 //        f=.3*Math.signum(error);
 
-        double motorPower = (p - d)*Math.abs(p - d) + f;
+        double motorPower = (p - d) + f;//*Math.abs(p - d)
         slideTimer.reset();
         prevSlideError = error;
 
@@ -558,7 +558,7 @@ public class NewIntake extends SubSystem {
 
             actualIntakeSpeed = targetIntakeSpeed;
         }
-        if (servoBusCurrent < 3.5) {
+        if (servoBusCurrent < 5.5) {
             servoStallTimer.reset();
         }
         switch (intakingState) {
@@ -961,5 +961,9 @@ public class NewIntake extends SubSystem {
 
     public double getActualSlidePos() {
         return slidePos;
+    }
+
+    public double getActualIntakePos() {
+        return actualIntakePos;
     }
 }
