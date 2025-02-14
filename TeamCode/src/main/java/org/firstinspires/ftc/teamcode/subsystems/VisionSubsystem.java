@@ -29,11 +29,15 @@ public class VisionSubsystem extends SubSystem {
 
     private Pose2d targetRobotPose = new Pose2d(0, 0, 0);
 
+    private Vector2d sampleRobotDiff = new Vector2d(0, 0);
+
     private double intakeHeight = 0;
 
     private Boolean blueAlliance;
 
     private final Telemetry.Item visionsTelem;
+
+    private boolean hasSampleVal = false;
 
 
 
@@ -71,17 +75,22 @@ public class VisionSubsystem extends SubSystem {
     public void priorityData() {
         intakePose = drivetrain.getIntakePoseEstimate();
         intakeHeight = drivetrain.getIntakeY();
+        hasSampleVal = pipeline.hasSample.get();
     }
 
     @Override
     public void loop() {
-        Vector2d relCords = pixelToRelFieldCords(pipeline.getTargetBlockPixels());
+        Vector2d relCords = hasSampleVal ? pixelToRelFieldCords(pipeline.getTargetBlockPixels()) : new Vector2d(0, 0);
 
         targetSamplePose = intakePose.getVector2d().plus(relCords.rotate(intakePose.getHeading()));
 
         visionsTelem.setValue(relCords.getX() + " angle: " + relCords.getY());
 
-        targetRobotPose = drivetrain.getPoseEstimate().getVector2d().toPose(targetSamplePose.minus(drivetrain.getPoseEstimate().getVector2d()).getDirection());
+        Pose2d driveTrainPoseEstimate = drivetrain.getPoseEstimate();
+
+        sampleRobotDiff = targetSamplePose.minus(driveTrainPoseEstimate.getVector2d());
+
+        targetRobotPose = driveTrainPoseEstimate.getVector2d().toPose(targetSamplePose.minus(drivetrain.getPoseEstimate().getVector2d()).getDirection());
 
     }
 
@@ -93,7 +102,9 @@ public class VisionSubsystem extends SubSystem {
 //
         packet.fieldOverlay().setStroke("#FFDE21");//yellow
 
-        DashboardUtil.drawMarker(packet.fieldOverlay(), targetSamplePose, true);
+        if (hasSample()) {
+            DashboardUtil.drawMarker(packet.fieldOverlay(), targetSamplePose, true);
+        }
 //        DashboardUtil.drawIntake(packet.fieldOverlay(), robotPos, slidePos);
 //
 //
@@ -123,7 +134,7 @@ public class VisionSubsystem extends SubSystem {
     }
 
     public boolean hasSample() {
-        return pipeline.hasSample.get();
+        return hasSampleVal;
     }
 
     public Vector2d getTargetSamplePose() {
@@ -132,5 +143,9 @@ public class VisionSubsystem extends SubSystem {
 
     public Pose2d getTargetRobotPose() {
         return targetRobotPose;
+    }
+
+    public Vector2d getSampleRobotDiff() {
+        return sampleRobotDiff;
     }
 }

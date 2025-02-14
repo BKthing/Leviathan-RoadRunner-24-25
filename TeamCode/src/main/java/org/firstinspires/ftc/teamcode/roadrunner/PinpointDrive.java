@@ -7,6 +7,7 @@ import static com.qualcomm.hardware.rev.RevHubOrientationOnRobot.zyxOrientation;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
+import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.FlightRecorder;
 import com.acmerobotics.roadrunner.ftc.GoBildaPinpointDriver;
 import com.acmerobotics.roadrunner.ftc.GoBildaPinpointDriverRR;
@@ -77,6 +78,8 @@ public class PinpointDrive extends MecanumDrive3 {
 
     public static Params PARAMS = new Params();
     public GoBildaPinpointDriverRR pinpoint;
+
+    public PoseVelocity2d velocity2d = new PoseVelocity2d(new Vector2d(0, 0), 0);
 //    private Pose2d lastPinpointPose = pose;
 
     public PinpointDrive(HardwareMap hardwareMap, Pose2d pose) {
@@ -141,7 +144,9 @@ public class PinpointDrive extends MecanumDrive3 {
         FlightRecorder.write("PINPOINT_RAW_POSE",new FTCPoseMessage(pinpoint.getPosition()));
         FlightRecorder.write("PINPOINT_STATUS",pinpoint.getDeviceStatus());
 
-        return pinpoint.getVelocityRR();
+        velocity2d = pinpoint.getVelocityRR();
+
+        return velocity2d;
     }
 
 
@@ -165,4 +170,7 @@ public class PinpointDrive extends MecanumDrive3 {
         this.pose = pose;
     }
 
+    public PoseVelocity2d getVelocity() {
+        return velocity2d;
+    }
 }

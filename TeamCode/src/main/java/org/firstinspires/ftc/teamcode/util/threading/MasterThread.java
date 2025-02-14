@@ -23,6 +23,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.firstinspires.ftc.teamcode.subsystems.NewDrivetrain;
 import org.firstinspires.ftc.teamcode.subsystems.SubSystem;
 
 public class MasterThread {
@@ -109,50 +110,55 @@ public class MasterThread {
         threadUpdateTimer.reset();
 
         for (SubSystem subSystem: subSystems) {
-            try {
-                Thread thread = new Thread( () -> {
-                    try {
-                        Thread.sleep(1000);
-
-                        throw new RuntimeException("Subsystem priorityData got stuck " + subSystem);
-                    } catch (InterruptedException e) {
-                    }
-                });
-                thread.start();
+//            try {
+//                Thread thread = new Thread( () -> {
+//                    try {
+//                        Thread.sleep(1000);
+//
+//                        throw new RuntimeException("Subsystem priorityData got stuck " + subSystem);
+//                    } catch (InterruptedException e) {
+//                    }
+//                });
+//                thread.start();
 
                 subSystem.priorityData();
 
-                thread.interrupt();
-                thread.join(1000);
-            } catch (Exception e) {
-                e.printStackTrace();
-                throw new RuntimeException("Subsystem priorityData got stuck " + subSystem);
-            }
+//                thread.interrupt();
+//                thread.join(1000);
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//                throw new RuntimeException("Subsystem priorityData got stuck " + subSystem);
+//            }
         }
 
         threadUpdateTime.setValue(threadUpdateTimer.milliSeconds());
 
 
         for (SubSystem subSystem: subSystems) {
-            try {
-                Thread thread = new Thread( () -> {
-                    try {
-                        Thread.sleep(1000);
+            if (subSystem.getClass() == NewDrivetrain.class) {
+                try {
+                    Thread thread = new Thread( () -> {
+                        try {
+                            Thread.sleep(1000);
 
-                        throw new RuntimeException("Subsystem loop got stuck " + subSystem);
-                    } catch (InterruptedException e) {
-                    }
-                });
-                thread.start();
+                            throw new RuntimeException("Subsystem loop got stuck " + subSystem);
+                        } catch (InterruptedException e) {
+                        }
+                    });
+                    thread.start();
 
+                    subSystem.loop();
+
+                    thread.interrupt();
+                    thread.join(1000);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    throw new RuntimeException("Subsystem loop got stuck at line " + ((NewDrivetrain) subSystem).lineNumber.get() + " " + subSystem);
+                }
+            } else {
                 subSystem.loop();
-
-                thread.interrupt();
-                thread.join(1000);
-            } catch (Exception e) {
-                e.printStackTrace();
-                throw new RuntimeException("Subsystem loop got stuck " + subSystem);
             }
+
         }
 
 

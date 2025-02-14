@@ -11,11 +11,11 @@ import com.reefsharklibrary.data.VelConstraint;
 public class RobotConstants {
     public static PIDCoeficients lateralPID = new PIDCoeficients(.15, .0, .02, 0, 0, 0);//.17, .0, .022,
 
-    public static PIDCoeficients pointPID = new PIDCoeficients(.17, 0, .01, 0, 0, 0);//.2, 0, .02
+    public static PIDCoeficients pointPID = new PIDCoeficients(.12, 0, .015, 0, 0, 0);//.2, 0, .02
 
-    public static double f = .1;
+    public static double f = .025;
 
-    public static PIDCoeficients headingPID = new PIDCoeficients(.08, .0, 0.0002);//.17, .07, 0.005 //0.0013 .1
+    public static PIDCoeficients headingPID = new PIDCoeficients(.08, .0, 0.00027);//.17, .07, 0.005 //0.0013 .1
 
     public static PIDCoeficients headingPointPID = new PIDCoeficients(.055, 0, 0.0003);//.002
 

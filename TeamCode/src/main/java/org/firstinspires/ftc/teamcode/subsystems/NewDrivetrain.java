@@ -32,6 +32,7 @@ import org.firstinspires.ftc.teamcode.util.threading.SubSystemData;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class NewDrivetrain extends SubSystem {
 
@@ -109,6 +110,8 @@ public class NewDrivetrain extends SubSystem {
     private Pose2d targetHoldPoint = new Pose2d(0, 0, 0);
     private boolean holdPoint = false;
 
+    public AtomicInteger lineNumber = new AtomicInteger();
+
     public NewDrivetrain(SubSystemData data, NewIntake intake) {
         this(data, DriveState.FOLLOW_PATH, intake);
     }
@@ -142,7 +145,7 @@ public class NewDrivetrain extends SubSystem {
 
         this.drive = new PinpointDrive(hardwareMap, new com.acmerobotics.roadrunner.Pose2d(0, 0, 0));
 
-        pidPointController = new PIDPointController(RobotConstants.lateralPID, RobotConstants.headingPID, RobotConstants.trackWidth, RobotConstants.f);
+        pidPointController = new PIDPointController(RobotConstants.pointPID, RobotConstants.headingPID, RobotConstants.trackWidth, RobotConstants.f);
 
         batteryVoltageSensor = hardwareMap.voltageSensor.iterator().next();
 
@@ -172,7 +175,7 @@ public class NewDrivetrain extends SubSystem {
     @Override
     public void loop() {
 
-        drive.setVoltage(voltage);
+        drive.setVoltage(voltage); lineNumber.set(178);
 
         //intake servo rotates by 92.804273
         //intake bar rotates by 124
@@ -181,25 +184,18 @@ public class NewDrivetrain extends SubSystem {
         //servo.setPos val to intake deg 400.8436119
         //-3.14961*Math.cos((1-intake.getActualIntakePos())*400.8436119)
 
-        double intakeOffset;
+        intakeY = intake.getIntakeVerticalOffset(); lineNumber.set(187);
 
-        if (intake.getActualIntakePos() == NewIntake.IntakePos.UP.pos) {
-            intakeOffset = -.5;
-            intakeY = 8.5;
-        } else {// if (intake.getActualIntakePos() == NewIntake.IntakePos.DOWN.pos) {
-            intakeOffset = 2.375;
-            intakeY = 4.125;
-        }
-
-        intakeDistance = intake.getActualSlidePos()+9.59029 + intakeOffset;
+        intakeDistance = intake.getActualSlidePos()+9.59029 + intake.getIntakeHorizontalOffset(); lineNumber.set(189);
 
 //        intakeDistance = 9.59029;
 
-        roadRunnerPoseEstimate = new Pose2d(drive.pose.position.x, drive.pose.position.y, drive.pose.heading.toDouble());
+        roadRunnerPoseEstimate = new Pose2d(drive.pose.position.x, drive.pose.position.y, drive.pose.heading.toDouble());  lineNumber.set(193);
 
+        roadRunnerPoseVelocity = new Pose2d(drive.getVelocity().linearVel.x, drive.getVelocity().linearVel.y, drive.getVelocity().angVel);
 
-        roadRunnerPos.setValue(roadRunnerPoseEstimate);
-        roadRunnerVel.setValue(roadRunnerPoseVelocity);
+        roadRunnerPos.setValue(roadRunnerPoseEstimate); lineNumber.set(196);
+        roadRunnerVel.setValue(roadRunnerPoseVelocity); lineNumber.set(197);
 
 
         if (voltageUpdateTimer.milliSeconds()>200) {
@@ -207,12 +203,11 @@ public class NewDrivetrain extends SubSystem {
                 updatedVoltage = batteryVoltageSensor.getVoltage();
             });
             voltageUpdateTimer.reset();
-        }
-
+        } lineNumber.set(205);
 
         switch (driveState) {
             case FOLLOW_PATH:
-
+                lineNumber.set(210);
                 if (followPath) {
                     packet = new TelemetryPacket();
                     packet.fieldOverlay().getOperations().addAll(canvas.getOperations());
@@ -232,9 +227,10 @@ public class NewDrivetrain extends SubSystem {
                         setDrivePower(motorPowers.getNormalizedVoltages(voltage));
                     }
                 }
-
+                lineNumber.set(230);
                 break;
             case DRIVER_CONTROL:
+                lineNumber.set(233);
                 followState.setValue("DRIVER");
 
                 drive.updatePoseEstimate();
@@ -266,7 +262,8 @@ public class NewDrivetrain extends SubSystem {
                     turn = 0;
                 }
 
-                powers.addHeading(turn);
+                lineNumber.set(265);
+                powers.addHeading(turn); lineNumber.set(266);
 
                 if (fieldCentric) {
                     //converting to field centric
@@ -274,7 +271,7 @@ public class NewDrivetrain extends SubSystem {
 
                 } else {
                     powers.addVector(new Vector2d(forward, strafing));
-                }
+                } lineNumber.set(274);
 
 
                 //driving settings
@@ -288,12 +285,13 @@ public class NewDrivetrain extends SubSystem {
                     fieldCentric = true;
                 }
 
-
-                setDrivePower(powers);
+                lineNumber.set(288);
+                setDrivePower(powers); lineNumber.set(289);
 
                 break;
         }
-        motorPowerTelemetry.setValue(drive.getDrivePowers());
+        lineNumber.set(293);
+        motorPowerTelemetry.setValue(drive.getDrivePowers()); lineNumber.set(294);
 
     }
 
@@ -408,5 +406,9 @@ public class NewDrivetrain extends SubSystem {
     public void cancelHoldPoint() {
         holdPoint = false;
         setDrivePower(Arrays.asList(0.0, 0.0, 0.0, 0.0));
+    }
+
+    public Pose2d getHoldPointError() {
+        return targetHoldPoint.minus(roadRunnerPoseEstimate);
     }
 }

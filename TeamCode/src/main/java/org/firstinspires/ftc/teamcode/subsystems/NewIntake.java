@@ -121,6 +121,7 @@ public class NewIntake extends SubSystem {
         RAISE_INTAKE,
         PARTIAL_RAISE_INTAKE,
         RAISE_TO_AUTO_HEIGHT,
+        SEARCH_POSITION,
         RETRACT,
         IDLE
     }
@@ -136,8 +137,8 @@ public class NewIntake extends SubSystem {
 
     public enum HorizontalSlide {
         //18.9 max
-        EXTRA_IN(-1),
-        IN(-.5),
+        EXTRA_IN(-.5),
+        IN(-.2),
         AUTO_PRESET1(13.5),
         AUTO_PRESET2(4),
         CLOSE(7),
@@ -170,6 +171,7 @@ public class NewIntake extends SubSystem {
         UP(.75),//.69
         AUTO_HEIGHT(.55),//.1),
         PARTIAL_UP(.5),//.11),
+        SEARCH(.53),
         DOWN(.39);//.16);//.05
 
         public final double pos;
@@ -432,8 +434,12 @@ public class NewIntake extends SubSystem {
                     } else {
     //                    intake.setTargetIntakePos(intake.getTargetIntakePos() + gamepad2.left_stick_y * .0002 * loopTimer.milliSeconds());
                     }
-            }
-            }
+                }
+
+                if (gamepad1.a) {
+                    toIntakeState(ToIntakeState.SEARCH_POSITION);
+                }
+             }
 
             if (gamepad2.left_bumper && !oldGamePad2.left_bumper) {
                 toIntakeState = ToIntakeState.DROP_INTAKE;
@@ -471,6 +477,12 @@ public class NewIntake extends SubSystem {
                 break;
             case RAISE_INTAKE:
                 targetIntakePos = IntakePos.UP.pos;
+
+                toIntakeState = ToIntakeState.IDLE;
+                break;
+            case SEARCH_POSITION:
+                targetIntakePos = IntakePos.SEARCH.pos;
+                targetSlidePos = 1;
 
                 toIntakeState = ToIntakeState.IDLE;
                 break;
@@ -523,8 +535,8 @@ public class NewIntake extends SubSystem {
             //Slides set to max power
             p = Math.signum(error);
         } else {//if (error<4 but error>.1)
-            p = error*.35;//.35;
-            d = ((prevSlideError-error) / elapsedTime) * .023;//.03;//.007
+            p = error*.3;//.35;
+            d = ((prevSlideError-error) / elapsedTime) * .02;//.03;//.007
             f=Math.signum(error)*0.15;//.15;
         }
 
@@ -965,5 +977,26 @@ public class NewIntake extends SubSystem {
 
     public double getActualIntakePos() {
         return actualIntakePos;
+    }
+
+    public double getIntakeHorizontalOffset() {
+        if (getActualIntakePos() == NewIntake.IntakePos.UP.pos) {
+            return -.5;
+        } else if (getActualIntakePos() == NewIntake.IntakePos.SEARCH.pos) {
+            //TODO: measure these vals
+            return  2.5;
+        } else {// if (intake.getActualIntakePos() == NewIntake.IntakePos.DOWN.pos) {
+            return 2.375;
+        }
+    }
+
+    public double getIntakeVerticalOffset() {
+        if (getActualIntakePos() == NewIntake.IntakePos.UP.pos) {
+            return 8.5;
+        } else if (getActualIntakePos() == NewIntake.IntakePos.SEARCH.pos) {
+            return 7.875;
+        } else {
+            return 4.125;
+        }
     }
 }

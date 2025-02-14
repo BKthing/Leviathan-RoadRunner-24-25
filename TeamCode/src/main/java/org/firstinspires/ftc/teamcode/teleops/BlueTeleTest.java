@@ -23,13 +23,10 @@ public class BlueTeleTest extends LinearOpMode {
     NewDrivetrain drivetrain;
     NewIntake intake;
     NewOuttake outtake;
-    VisionSubsystem vision;
     MasterThread masterThread;
     Telemetry.Item loopTime;
 
-    Boolean blueAlliance = null;
-
-    private List<LynxModule> allHubs;
+    Boolean blueAlliance = true;
 
     private Encoder verticalSlideEncoder, horizontalSlideEncoder;
 
@@ -57,14 +54,12 @@ public class BlueTeleTest extends LinearOpMode {
 
         outtake = new NewOuttake(masterThread.getData(), intake, verticalSlideEncoder, blueAlliance, true, true, true, false, () -> drivetrain.getVoltage());
 
-        vision = new VisionSubsystem(drivetrain, masterThread.getData(), blueAlliance);
-
         //its important that outtake is added after intake for update order purposes
         masterThread.addSubSystems(
                 drivetrain,
                 intake,
-                outtake,
-                vision
+                outtake//,
+//                vision
         );
 
 

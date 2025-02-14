@@ -1,24 +1,27 @@
 package org.firstinspires.ftc.teamcode.teleops;
 
-import static org.firstinspires.ftc.teamcode.util.MathUtil.toRoadRunnerPose;
+import androidx.annotation.NonNull;
 
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.Trajectory;
-import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.TouchSensor;
+import com.reefsharklibrary.data.Rotation;
+import com.reefsharklibrary.data.Vector2d;
 import com.reefsharklibrary.misc.ElapsedTimer;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.autos.RRLeft0plus7Auto;
 import org.firstinspires.ftc.teamcode.subsystems.NewDrivetrain;
 import org.firstinspires.ftc.teamcode.subsystems.NewIntake;
 import org.firstinspires.ftc.teamcode.subsystems.NewOuttake;
 import org.firstinspires.ftc.teamcode.subsystems.VisionSubsystem;
 import org.firstinspires.ftc.teamcode.util.Encoder;
+import org.firstinspires.ftc.teamcode.util.MathUtil;
 import org.firstinspires.ftc.teamcode.util.threading.MasterThread;
 
 import java.util.List;
@@ -44,10 +47,23 @@ public class CameraPickupTest extends LinearOpMode {
 
     private Telemetry.Item targetAngle;
 
+    private double maxGrabAngle = Math.toRadians(-10);
+
+    private double extensionDistance = 0;
+
+    private final ElapsedTimer autoTimer = new ElapsedTimer();
+
+    Vector2d holdPoint = new Vector2d(0, 0);
+
+    double targetHeading = 0;
+    double prevHeading = 0;
+    ElapsedTimer loopTimer = new ElapsedTimer();
+
+    Action grabFromSubmersible = new GrabFromSubmersible();
+
 
     @Override
     public void runOpMode() throws InterruptedException {
-        ElapsedTimer loopTimer = new ElapsedTimer();
         loopTime = telemetry.addData("Loop time:", loopTimer.milliSeconds());
 
         masterThread = new MasterThread(hardwareMap, telemetry, gamepad1, gamepad2);
@@ -90,15 +106,99 @@ public class CameraPickupTest extends LinearOpMode {
             masterThread.unThreadedUpdate();
 
 
-//            if (gamepad1.left_bumper) {
-                drivetrain.holdPoint(new com.reefsharklibrary.data.Pose2d(0, 0, 0));//vision.getTargetRobotPose()
-//            } else {
-//                drivetrain.cancelHoldPoint();
-//            }
+//            double targetHeading = prevHeading+Rotation.inRange((vision.getTargetRobotPose().getHeading()-prevHeading)*.125, Math.PI, -Math.PI);
+//                drivetrain.holdPoint(holdPoint.toPose(targetHeading));//vision.getTargetRobotPose()
+            if (gamepad1.b) {
+                grabFromSubmersible = new GrabFromSubmersible();
+            }
+            grabFromSubmersible.run(new TelemetryPacket());
+
+            prevHeading = targetHeading;
 
             loopTime.setValue(loopTimer.milliSeconds());
 
             loopTimer.reset();
+        }
+    }
+
+    public class GrabFromSubmersible implements Action {
+
+        RRLeft0plus7Auto.GrabFromSubmersibleState grabFromSubmersibleState = RRLeft0plus7Auto.GrabFromSubmersibleState.SEARCHING;
+
+
+        @Override
+        public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                switch (grabFromSubmersibleState) {
+                    case SEARCHING:
+                        if (vision.hasSample()) {
+                            targetHeading = prevHeading+Rotation.inRange((vision.getTargetRobotPose().getHeading()-prevHeading)*.125, Math.PI, -Math.PI);
+
+                            drivetrain.holdPoint(holdPoint.toPose(targetHeading));
+
+                            extensionDistance = Math.max(vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset() - intake.getActualSlidePos() - 8, 0);//Math.max(extensionDistance+(vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset() - 4)*.125, 3);
+                            intake.setTargetSlidePos(extensionDistance);
+
+                            autoTimer.reset();
+                            grabFromSubmersibleState = RRLeft0plus7Auto.GrabFromSubmersibleState.APPROACHING;
+                        }
+                        break;
+                    case APPROACHING:
+                        //adjustSlides
+//                        double newExtensionDistance = Math.max(extensionDistance+(vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset() - 4)*.125, 3);
+//                        if (Math.abs(newExtensionDistance - extensionDistance) > .1) {
+//                            extensionDistance = newExtensionDistance;
+//                            intake.setTargetSlidePos(extensionDistance);
+//                        }
+
+                        //adjust holdPoint heading
+                        targetHeading = prevHeading+Rotation.inRange((vision.getTargetRobotPose().getHeading()-prevHeading)*.125, Math.PI, -Math.PI);
+
+                        drivetrain.holdPoint(holdPoint.toPose(targetHeading));//, maxGrabAngle
+
+
+                        if (drivetrain.getHoldPointError().inRange(new com.reefsharklibrary.data.Pose2d(1, 1, Math.toRadians(2)))) {
+                            intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
+                            intake.setIntakingState(NewIntake.IntakingState.START_INTAKING);
+                        }
+                        break;
+                    case INTAKING:
+                        targetHeading = prevHeading+Rotation.inRange((vision.getTargetRobotPose().getHeading()-prevHeading)*.125, Math.PI, -Math.PI);
+
+                        drivetrain.holdPoint(holdPoint.toPose(targetHeading));
+
+                        if (autoTimer.seconds() > 1000) {
+                            intake.toIntakeState(NewIntake.ToIntakeState.SEARCH_POSITION);
+                            double curHeading = drivetrain.getPoseEstimate().getHeading();
+
+                            if (intake.getPrevIntakingState() != NewIntake.IntakingState.INTAKING && intake.getPrevIntakingState() != NewIntake.IntakingState.START_INTAKING && intake.getPrevIntakingState() != NewIntake.IntakingState.SERVO_STALL_START_UNJAMMING && intake.getPrevIntakingState() != NewIntake.IntakingState.SERVO_STALL_UNJAMMING_SPIN_OUT) {
+                                return false;
+                            }
+
+                            if (curHeading > Math.toRadians(185)) {
+                                drivetrain.holdPoint(holdPoint.toPose(175));
+                            } else if (curHeading < Math.toRadians(175)) {
+                                drivetrain.holdPoint(holdPoint.toPose(185));
+                            } else {
+                                drivetrain.holdPoint(holdPoint.toPose(170));
+                            }
+
+                            grabFromSubmersibleState = RRLeft0plus7Auto.GrabFromSubmersibleState.RESETTING;
+                        } else {
+//                            extensionDistance = MathUtil.clip(extensionDistance + 20 * loopTimer.seconds(), -.5, 18.5);
+//                            intake.setTargetSlidePos(extensionDistance);
+                        }
+                        break;
+                    case RESETTING:
+                        if (drivetrain.getHoldPointError().inRange(new com.reefsharklibrary.data.Pose2d(1, 1, Math.toRadians(2)))) {
+                            grabFromSubmersibleState = RRLeft0plus7Auto.GrabFromSubmersibleState.SEARCHING;
+                        }
+                        break;
+                }
+
+
+                return true;
+
+
         }
     }
 
