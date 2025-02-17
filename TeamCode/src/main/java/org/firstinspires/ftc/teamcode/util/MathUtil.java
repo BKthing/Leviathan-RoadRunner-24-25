@@ -19,6 +19,10 @@ public class MathUtil {
         return new Pose2d(pose.position.x, pose.position.y, pose.heading.toDouble());
     }
 
+    public static Pose2d toReefSharkPose(com.acmerobotics.roadrunner.PoseVelocity2d pose) {
+        return new Pose2d(pose.linearVel.x, pose.linearVel.y, pose.angVel);
+    }
+
     public static Pose2d robotToIntakePos(Pose2d robotPos, double slideLength) {
         return robotPos.plus(new Vector2d(slideLength, robotPos.getHeading(), true).toPose(0));
     }

@@ -25,7 +25,8 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
         COLOR_FILTER,
         BASE_VECTOR_FIELD,
         BLOCK_VECTOR_FIELD,
-        COMBINED_VECTOR_FIELD
+        COMBINED_VECTOR_FIELD,
+        RAW_CAMERA
     }
 
     DisplayType displayType = DisplayType.COLOR_FILTER;
@@ -165,6 +166,7 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
         Imgproc.dilate(blockPullVectorField, blockPullVectorField, smallElement);
         Imgproc.dilate(blockPullVectorField, blockPullVectorField, smallElement);
         Imgproc.dilate(blockPullVectorField, blockPullVectorField, smallElement);
+        Imgproc.dilate(blockPullVectorField, blockPullVectorField, smallElement);
 
 
         //combining push and pull
@@ -173,7 +175,7 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
         Imgproc.blur(blockVectorField, blockVectorField, new Size(32, 32));
         Imgproc.blur(blockVectorField, blockVectorField, new Size(32, 32));
         Imgproc.blur(blockVectorField, blockVectorField, new Size(16, 16));
-        Imgproc.blur(blockVectorField, blockVectorField, new Size(16, 16));
+//        Imgproc.blur(blockVectorField, blockVectorField, new Size(16, 16));
         Imgproc.blur(blockVectorField, blockVectorField, new Size(8, 8));
 
 //        for(int i = 0; i<10; i++) {
@@ -192,16 +194,16 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
                 //                output.setTo(blockVectorField);
                 Imgproc.cvtColor(blockVectorField, output, COLOR_GRAY2BGR);
                 //                blockVectorField.convertTo(output, COLOR_GRAY2BGR);
-                intakePoint = searchField(blockVectorField, intakePoint, 128);
+                intakePoint = searchField(blockVectorField, intakePoint, 64);
 
                 if (safeGetMat(blockPullVectorField, intakePoint.getX(), intakePoint.getY()) < 140) {
-                    intakePoint = searchField(blockVectorField, new Vector2d(cameraColumns/2, cameraRows/2), 128);
+                    intakePoint = searchField(blockVectorField, new Vector2d(cameraColumns/2, cameraRows/2), 64);
 
                     if (safeGetMat(blockPullVectorField, intakePoint.getX(), intakePoint.getY()) < 140) {
-                        intakePoint = searchField(blockVectorField, new Vector2d(cameraColumns/4, cameraRows/4), 128);
+                        intakePoint = searchField(blockVectorField, new Vector2d(cameraColumns/4, cameraRows/4), 64);
 
                         if (safeGetMat(blockPullVectorField, intakePoint.getX(), intakePoint.getY()) < 140) {
-                            intakePoint = searchField(blockVectorField, new Vector2d(cameraColumns*3/4, cameraRows*3/4), 128);
+                            intakePoint = searchField(blockVectorField, new Vector2d(cameraColumns*3/4, cameraRows*3/4), 64);
                         }
                     }
                 }
@@ -222,8 +224,8 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
                 }
 
                 break;
-            case COMBINED_VECTOR_FIELD:
-
+            case RAW_CAMERA:
+                input.copyTo(output);
                 break;
         }
 

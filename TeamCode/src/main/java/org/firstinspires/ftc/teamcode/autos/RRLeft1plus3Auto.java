@@ -56,13 +56,16 @@ public class RRLeft1plus3Auto extends LinearOpMode {
 
         masterThread = new MasterThread(hardwareMap, telemetry, gamepad1, gamepad2);
 
-        drivetrain = new NewDrivetrain(masterThread.getData(), intake);
-        drivetrain.setDriveState(NewDrivetrain.DriveState.FOLLOW_PATH);
-
         horizontalSlideEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, "horizontalLeft"));
         breakBeam = hardwareMap.get(TouchSensor.class, "breakBeam");
 
         intake = new NewIntake(masterThread.getData(), horizontalSlideEncoder, breakBeam, blueAlliance, false, true, () -> drivetrain.getVoltage());
+
+        drivetrain = new NewDrivetrain(masterThread.getData(), intake);
+        drivetrain.setDriveState(NewDrivetrain.DriveState.FOLLOW_PATH);
+
+
+
 
 
         verticalSlideEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, "verticalLeft"));
@@ -160,8 +163,6 @@ public class RRLeft1plus3Auto extends LinearOpMode {
         waitForStart();
 
         drivetrain.drive.setPoseEstimate(new Pose2d(16.8, 62.1, Math.toRadians(270)));
-        drivetrain.drive.pinpoint.setPosition(new  Pose2d(16.8, 62.1, Math.toRadians(270)));
-
 
         masterThread.clearBulkCache();
 

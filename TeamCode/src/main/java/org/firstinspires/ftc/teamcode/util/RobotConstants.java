@@ -2,9 +2,7 @@ package org.firstinspires.ftc.teamcode.util;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.reefsharklibrary.data.AngVelConstraint;
-import com.reefsharklibrary.data.ConstraintSet;
 import com.reefsharklibrary.data.PIDCoeficients;
-import com.reefsharklibrary.data.Pose2d;
 import com.reefsharklibrary.data.VelConstraint;
 
 @Config
@@ -13,13 +11,15 @@ public class RobotConstants {
 
     public static PIDCoeficients pointPID = new PIDCoeficients(.12, 0, .015, 0, 0, 0);//.2, 0, .02
 
-    public static double f = .025;
+    public static double lateralF = .02;
 
-    public static PIDCoeficients headingPID = new PIDCoeficients(.08, .0, 0.00027);//.17, .07, 0.005 //0.0013 .1
+    public static double headingF = .032;
 
-    public static PIDCoeficients headingPointPID = new PIDCoeficients(.055, 0, 0.0003);//.002
+    public static PIDCoeficients headingPID = new PIDCoeficients(.1, .0, 0.005);//.0002
 
-    public static Pose2d naturalDecel = new Pose2d(250, 250, Math.toRadians(600));//400, 400
+//    public static PIDCoeficients headingPointPID = new PIDCoeficients(.055, 0, 0.0003);//.002
+
+//    public static Pose2d naturalDecel = new Pose2d(250, 250, Math.toRadians(600));//400, 400
 
     public static double trackWidth = 16;
 
@@ -27,7 +27,7 @@ public class RobotConstants {
 
     public static final AngVelConstraint angVelConstraint = new AngVelConstraint(Math.toRadians(300), Math.toRadians(300), Math.toRadians(300));
 
-    public static final ConstraintSet constraints = new ConstraintSet(lateralPID, pointPID, headingPID, headingPointPID, velConstraint, angVelConstraint, naturalDecel, trackWidth, 1.1, .15);
+//    public static final ConstraintSet constraints = new ConstraintSet(lateralPID, pointPID, headingPID, headingPointPID, velConstraint, angVelConstraint, naturalDecel, trackWidth, 1.1, .15);
 
     public static final int cameraRows = 320;
 

@@ -17,6 +17,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.teamcode.pinpoint.CustomPinpointDriver;
 import org.firstinspires.ftc.teamcode.roadrunner.messages.PoseMessage;
 
 /**
@@ -63,8 +64,8 @@ public class PinpointDrive extends MecanumDrive3 {
         increase when you move the robot forward. And the Y (strafe) pod should increase when
         you move the robot to the left.
          */
-        public GoBildaPinpointDriver.EncoderDirection xDirection = GoBildaPinpointDriver.EncoderDirection.REVERSED;
-        public GoBildaPinpointDriver.EncoderDirection yDirection = GoBildaPinpointDriver.EncoderDirection.FORWARD;
+        public org.firstinspires.ftc.teamcode.pinpoint.GoBildaPinpointDriver.EncoderDirection xDirection = org.firstinspires.ftc.teamcode.pinpoint.GoBildaPinpointDriver.EncoderDirection.REVERSED;
+        public org.firstinspires.ftc.teamcode.pinpoint.GoBildaPinpointDriver.EncoderDirection yDirection = org.firstinspires.ftc.teamcode.pinpoint.GoBildaPinpointDriver.EncoderDirection.FORWARD;
 
         /*
         Use the pinpoint IMU for tuning
@@ -77,7 +78,7 @@ public class PinpointDrive extends MecanumDrive3 {
     }
 
     public static Params PARAMS = new Params();
-    public GoBildaPinpointDriverRR pinpoint;
+    public CustomPinpointDriver pinpoint;
 
     public PoseVelocity2d velocity2d = new PoseVelocity2d(new Vector2d(0, 0), 0);
 //    private Pose2d lastPinpointPose = pose;
@@ -85,19 +86,19 @@ public class PinpointDrive extends MecanumDrive3 {
     public PinpointDrive(HardwareMap hardwareMap, Pose2d pose) {
         super(hardwareMap, pose);
         FlightRecorder.write("PINPOINT_PARAMS",PARAMS);
-        pinpoint = hardwareMap.get(GoBildaPinpointDriverRR.class,PARAMS.pinpointDeviceName);
+        pinpoint = new CustomPinpointDriver(hardwareMap, pose, PARAMS);
 
         if (PARAMS.usePinpointIMUForTuning) {
             lazyImu = new LazyImu(hardwareMap, PARAMS.pinpointDeviceName, new RevHubOrientationOnRobot(zyxOrientation(0, 0, 0)));
         }
 
         // RR localizer note: don't love this conversion (change driver?)
-        pinpoint.setOffsets(DistanceUnit.MM.fromInches(PARAMS.xOffset), DistanceUnit.MM.fromInches(PARAMS.yOffset));
-
-
-        pinpoint.setEncoderResolution(PARAMS.encoderResolution);
-
-        pinpoint.setEncoderDirections(PARAMS.xDirection, PARAMS.yDirection);
+//        pinpoint.setOffsets(DistanceUnit.MM.fromInches(PARAMS.xOffset), DistanceUnit.MM.fromInches(PARAMS.yOffset));
+//
+//
+//        pinpoint.setEncoderResolution(PARAMS.encoderResolution);
+//
+//        pinpoint.setEncoderDirections(PARAMS.xDirection, PARAMS.yDirection);
 
         /*
         Before running the robot, recalibrate the IMU. This needs to happen when the robot is stationary
@@ -108,15 +109,20 @@ public class PinpointDrive extends MecanumDrive3 {
         an incorrect starting value for x, y, and heading.
          */
         //pinpoint.recalibrateIMU();
-        pinpoint.resetPosAndIMU();
-        // wait for pinpoint to finish calibrating
+//        pinpoint.resetPosAndIMU();
         try {
-            Thread.sleep(300);
+            pinpoint.resetIMU();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+        // wait for pinpoint to finish calibrating
+//        try {
+//            Thread.sleep(300);
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
 
-        pinpoint.setPosition(pose);
+        pinpoint.setPose(pose);
     }
     @Override
     public PoseVelocity2d updatePoseEstimate() {
@@ -131,7 +137,7 @@ public class PinpointDrive extends MecanumDrive3 {
 //            pinpoint.setPosition(pose);
 //        }
         pinpoint.update();
-        pose = pinpoint.getPositionRR();
+        pose = pinpoint.getPose();
 //        lastPinpointPose = pose;
 
         // RR standard
@@ -141,10 +147,10 @@ public class PinpointDrive extends MecanumDrive3 {
         }
 
         FlightRecorder.write("ESTIMATED_POSE", new PoseMessage(pose));
-        FlightRecorder.write("PINPOINT_RAW_POSE",new FTCPoseMessage(pinpoint.getPosition()));
-        FlightRecorder.write("PINPOINT_STATUS",pinpoint.getDeviceStatus());
+        FlightRecorder.write("PINPOINT_RAW_POSE",new FTCPoseMessage(new Pose2D(DistanceUnit.INCH, pinpoint.getPose().position.x, pinpoint.getPose().position.y, AngleUnit.RADIANS, pinpoint.getPose().heading.toDouble())));
+        FlightRecorder.write("PINPOINT_STATUS",pinpoint.isPinpointCooked());
 
-        velocity2d = pinpoint.getVelocityRR();
+        velocity2d = pinpoint.getVelocity();
 
         return velocity2d;
     }
@@ -166,7 +172,7 @@ public class PinpointDrive extends MecanumDrive3 {
     }
 
     public void setPoseEstimate(Pose2d pose) {
-        pinpoint.setPositionRR(pose);
+        pinpoint.setPose(pose);
         this.pose = pose;
     }
 

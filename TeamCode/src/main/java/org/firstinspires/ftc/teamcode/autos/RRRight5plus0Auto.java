@@ -52,15 +52,17 @@ public class RRRight5plus0Auto extends LinearOpMode {
         ElapsedTimer loopTimer = new ElapsedTimer();
         loopTime = telemetry.addData("Loop time:", loopTimer.milliSeconds());
 
+        horizontalSlideEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, "horizontalLeft"));
+        breakBeam = hardwareMap.get(TouchSensor.class, "breakBeam");
+
         masterThread = new MasterThread(hardwareMap, telemetry, gamepad1, gamepad2);
+
+        intake = new NewIntake(masterThread.getData(), horizontalSlideEncoder, breakBeam, blueAlliance, false, true, () -> drivetrain.getVoltage());
+
 
         drivetrain = new NewDrivetrain(masterThread.getData(), intake);
         drivetrain.setDriveState(NewDrivetrain.DriveState.FOLLOW_PATH);
 
-        horizontalSlideEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, "horizontalLeft"));
-        breakBeam = hardwareMap.get(TouchSensor.class, "breakBeam");
-
-        intake = new NewIntake(masterThread.getData(), horizontalSlideEncoder, breakBeam, blueAlliance, false, true, () -> drivetrain.getVoltage());
 
 
         verticalSlideEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, "verticalLeft"));
@@ -229,7 +231,6 @@ public class RRRight5plus0Auto extends LinearOpMode {
         waitForStart();
 
         drivetrain.drive.setPoseEstimate(new  Pose2d(-5.5, 62.1, Math.toRadians(270)));
-        drivetrain.drive.pinpoint.setPosition(new  Pose2d(-5.5, 62.1, Math.toRadians(270)));
 
         masterThread.clearBulkCache();
 

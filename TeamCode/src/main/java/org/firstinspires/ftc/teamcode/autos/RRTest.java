@@ -6,12 +6,12 @@ import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.InstantAction;
 import com.acmerobotics.roadrunner.MinVelConstraint;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.ProfileAccelConstraint;
-import com.acmerobotics.roadrunner.Rotation2d;
 import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.SleepAction;
+import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -32,7 +32,7 @@ import org.firstinspires.ftc.teamcode.util.threading.MasterThread;
 import java.util.Arrays;
 
 @Autonomous
-public class RRLeft0plus7Auto extends LinearOpMode {
+public class RRTest extends LinearOpMode {
 
     public enum GrabFromSubmersibleState {
         SEARCHING,
@@ -52,7 +52,7 @@ public class RRLeft0plus7Auto extends LinearOpMode {
     NewOuttake outtake;
     VisionSubsystem vision;
     MasterThread masterThread;
-    Telemetry.Item loopTimeTelem;
+    Telemetry.Item loopTime;
 
     Boolean blueAlliance = null;
 
@@ -62,7 +62,7 @@ public class RRLeft0plus7Auto extends LinearOpMode {
 
     double extensionDistance = 0;
 
-    private final com.reefsharklibrary.data.Vector2d holdPoint = new com.reefsharklibrary.data.Vector2d(22, 8);
+    private final com.reefsharklibrary.data.Vector2d holdPoint = new com.reefsharklibrary.data.Vector2d(22, 10);
 
     private final ElapsedTimer loopTimer = new ElapsedTimer();
 
@@ -72,12 +72,10 @@ public class RRLeft0plus7Auto extends LinearOpMode {
 
     double timeThreshold = 0;
 
-    double loopTime = 0;
-
 
     @Override
     public void runOpMode() throws InterruptedException {
-        loopTimeTelem = telemetry.addData("Loop time:", loopTimer.milliSeconds());
+        loopTime = telemetry.addData("Loop time:", loopTimer.milliSeconds());
 
         masterThread = new MasterThread(hardwareMap, telemetry, gamepad1, gamepad2);
 
@@ -112,9 +110,9 @@ public class RRLeft0plus7Auto extends LinearOpMode {
                 .afterTime(.3, () -> {
                     intake.toIntakeState(NewIntake.ToIntakeState.RAISE_INTAKE);
                 })
-                .afterTime(.8, () -> {//0
-                    intake.setTargetSlidePos(13.5);
-                    extensionDistance = 13.5;
+                .afterTime(.6, () -> {//0
+                    intake.setTargetSlidePos(14);
+                    extensionDistance = 14;
                 })
                 .splineToLinearHeading(new Pose2d(62, 54, Math.toRadians(250)), Math.toRadians(0))
                 .build();
@@ -139,8 +137,8 @@ public class RRLeft0plus7Auto extends LinearOpMode {
 
         Action moveToGrabBlock2 = drivetrain.drive.actionBuilder(new Pose2d(62, 53, Math.toRadians(265)))
                 .afterTime(0, () -> {
-                    intake.setTargetSlidePos(10);
-                    extensionDistance = 10;
+                    intake.setTargetSlidePos(10.5);
+                    extensionDistance = 10.5;
                     intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
                     intake.setIntakingState(NewIntake.IntakingState.START_INTAKING);
                     autoTimer.reset();
@@ -211,25 +209,6 @@ public class RRLeft0plus7Auto extends LinearOpMode {
             }
         };
 
-        Action moveToSubmersible3 = new Action() {
-            boolean notCanceled = true;
-
-            final Action action = drivetrain.drive.actionBuilder(new Pose2d(54, 54, Math.toRadians(240)))
-                    .setTangent(Math.toRadians(235))
-                    .afterDisp(37, () -> {
-                        intake.toIntakeState(NewIntake.ToIntakeState.SEARCH_POSITION);
-                        drivetrain.holdPoint(holdPoint.toPose(Math.toRadians(180)));
-                        notCanceled = false;
-                    })
-                    .lineToYLinearHeading(0, Math.toRadians(190), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-60, PARAMS.maxProfileAccel))
-                    .build();
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-                return notCanceled && action.run(telemetryPacket);
-            }
-        };
-
 
         Action moveToScoreFromSubmersible1 = drivetrain.drive.actionBuilder(new Pose2d(22, 10, Math.toRadians(180)))
                 .setTangent(Math.toRadians(0))
@@ -247,20 +226,15 @@ public class RRLeft0plus7Auto extends LinearOpMode {
                 .splineTo(new Vector2d(54, 54), Math.toRadians(60), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-40, PARAMS.maxProfileAccel))
                 .build();
 
-        Action moveToScoreFromSubmersible3 = drivetrain.drive.actionBuilder(new Pose2d(22, 10, Math.toRadians(180)))
-                .setTangent(Math.toRadians(0))
-                .afterTime(0, () -> {
-                    drivetrain.cancelHoldPoint();
-                })
-                .splineTo(new Vector2d(54, 54), Math.toRadians(60), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-40, PARAMS.maxProfileAccel))
-                .build();
-
 
         Action park = new Action() {
             boolean notCanceled = true;
 
             final Action action = drivetrain.drive.actionBuilder(new Pose2d(54, 54, Math.toRadians(240)))
                     .setTangent(Math.toRadians(235))
+                    .afterTime(0, () -> {
+                        drivetrain.cancelHoldPoint();
+                    })
                     .afterDisp(30, () -> {
                         intake.toIntakeState(NewIntake.ToIntakeState.RAISE_INTAKE);
                         outtake.toOuttakeState(NewOuttake.ToOuttakeState.TOUCH_BAR);
@@ -278,49 +252,44 @@ public class RRLeft0plus7Auto extends LinearOpMode {
             }
         };
 
+
         waitForStart();
 
         totalAutoTimer.reset();
 
-        drivetrain.drive.setPoseEstimate(new Pose2d(38.93, 60.23, Math.toRadians(180)));
+        drivetrain.drive.setPoseEstimate(new Pose2d(62.5, 55, Math.toRadians(270)));
 
         masterThread.clearBulkCache();
 
-        intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
-        outtake.toOuttakeState(NewOuttake.ToOuttakeState.PLACE_BEHIND);
+//        intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
+//        outtake.toOuttakeState(NewOuttake.ToOuttakeState.PLACE_BEHIND);
 
         drivetrain.followPath(new SequentialAction(
                 new RunToTimeThreshold(
                         new SequentialAction(
-                                preload,
-                                new ScoreBlock(),
-                                moveToGrabBlock1,
-                                intakeBlock,
-                                moveToScoreBlock1,
-                                new ScoreBlock(),
-                                moveToGrabBlock2,
-                                intakeBlock,
-                                moveToScoreBlock2,
-                                new ScoreBlock(),
-                                moveToGrabBlock3,
-                                intakeBlock,
-                                moveToScoreBlock3,
-                                new ScoreBlock(),
-
+//                                preload,
+//                                new ScoreBlock(),
+//                                moveToGrabBlock1,
+//                                intakeBlock,
+//                                moveToScoreBlock1,
+//                                new ScoreBlock(),
+//                                moveToGrabBlock2,
+//                                intakeBlock,
+//                                moveToScoreBlock2,
+//                                new ScoreBlock(),
+//                                moveToGrabBlock3,
+//                                intakeBlock,
+//                                moveToScoreBlock3,
+//                                new ScoreBlock(),
                                 moveToSubmersible1,
-                                new GrabFromSubmersible(),
+                                new SleepAction(.8),
+//                                new GrabFromSubmersible(),
                                 moveToScoreFromSubmersible1,
-                                new ScoreBlock(),
-
+//                                new ScoreBlock()
                                 moveToSubmersible2,
-                                new GrabFromSubmersible(),
-                                moveToScoreFromSubmersible2,
-                                new ScoreBlock(),
-
-                                moveToSubmersible3,
-                                new GrabFromSubmersible(),
-                                moveToScoreFromSubmersible3,
-                                new ScoreBlock()
+                                new SleepAction(.8),
+                                moveToScoreFromSubmersible2
+//                                moveToScoreFromSubmersible2
                         )
                 ),
                 park
@@ -330,8 +299,7 @@ public class RRLeft0plus7Auto extends LinearOpMode {
 
             masterThread.unThreadedUpdate();
 
-            loopTime = loopTimer.seconds();
-            loopTimeTelem.setValue(loopTimer.milliSeconds());
+            loopTime.setValue(loopTimer.milliSeconds());
 
             loopTimer.reset();
         }
@@ -351,7 +319,6 @@ public class RRLeft0plus7Auto extends LinearOpMode {
     }
 
     public class IntakeBlock implements Action {
-
         @Override
         public boolean run(@NonNull TelemetryPacket telemetryPacket) {
             if (intake.getPrevIntakingState() != NewIntake.IntakingState.INTAKING && intake.getPrevIntakingState() != NewIntake.IntakingState.START_INTAKING && intake.getPrevIntakingState() != NewIntake.IntakingState.SERVO_STALL_START_UNJAMMING && intake.getPrevIntakingState() != NewIntake.IntakingState.SERVO_STALL_UNJAMMING_SPIN_OUT) {
@@ -360,7 +327,7 @@ public class RRLeft0plus7Auto extends LinearOpMode {
                 intake.toIntakeState(NewIntake.ToIntakeState.RETRACT);
                 return false;
             } else {
-                extensionDistance = MathUtil.clip(extensionDistance + 20 * loopTime, -.5, 18.5);
+                extensionDistance = MathUtil.clip(extensionDistance + 20 * loopTimer.seconds(), -.5, 18.5);
                 intake.setTargetSlidePos(extensionDistance);
                 return true;
             }
@@ -392,7 +359,8 @@ public class RRLeft0plus7Auto extends LinearOpMode {
     }
 
     public class GrabFromSubmersible implements Action {
-        RRLeft0plus7Auto.GrabFromSubmersibleState grabFromSubmersibleState = RRLeft0plus7Auto.GrabFromSubmersibleState.SEARCHING;
+
+        RRTest.GrabFromSubmersibleState grabFromSubmersibleState = RRTest.GrabFromSubmersibleState.SEARCHING;
 
 
         @Override
@@ -400,7 +368,7 @@ public class RRLeft0plus7Auto extends LinearOpMode {
 
             if (intake.getPrevIntakingState() == NewIntake.IntakingState.FINISH_EJECTING || intake.getPrevIntakingState() == NewIntake.IntakingState.START_EJECTING) {
 
-                grabFromSubmersibleState = RRLeft0plus7Auto.GrabFromSubmersibleState.EJECTING;
+                grabFromSubmersibleState = RRTest.GrabFromSubmersibleState.EJECTING;
             }
 
             switch (grabFromSubmersibleState) {
@@ -414,7 +382,7 @@ public class RRLeft0plus7Auto extends LinearOpMode {
                         intake.setTargetSlidePos(extensionDistance);
 
                         autoTimer.reset();
-                        grabFromSubmersibleState = RRLeft0plus7Auto.GrabFromSubmersibleState.APPROACHING;
+                        grabFromSubmersibleState = RRTest.GrabFromSubmersibleState.APPROACHING;
                     }
                     break;
                 case APPROACHING:
@@ -434,7 +402,7 @@ public class RRLeft0plus7Auto extends LinearOpMode {
                     if (drivetrain.getHoldPointError().minimizeHeading(Math.PI, -Math.PI).inRange(new com.reefsharklibrary.data.Pose2d(1, 1, Math.toRadians(3.5)))) {
                         intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
                         intake.setIntakingState(NewIntake.IntakingState.START_INTAKING);
-                        grabFromSubmersibleState = RRLeft0plus7Auto.GrabFromSubmersibleState.INTAKING;
+                        grabFromSubmersibleState = RRTest.GrabFromSubmersibleState.INTAKING;
                     }
                     break;
                 case INTAKING:
@@ -461,9 +429,9 @@ public class RRLeft0plus7Auto extends LinearOpMode {
                             drivetrain.holdPoint(holdPoint.toPose(Math.toRadians(170)));
                         }
 
-                        grabFromSubmersibleState = RRLeft0plus7Auto.GrabFromSubmersibleState.RESETTING;
+                        grabFromSubmersibleState = RRTest.GrabFromSubmersibleState.RESETTING;
                     } else {
-                        extensionDistance = MathUtil.clip(extensionDistance + 8 * loopTime, -.5, 18.5);
+                        extensionDistance = MathUtil.clip(extensionDistance + 5 * loopTimer.seconds(), -.5, 18.5);
                         intake.setTargetSlidePos(extensionDistance);
                     }
                     break;
@@ -474,12 +442,12 @@ public class RRLeft0plus7Auto extends LinearOpMode {
                         extensionDistance = 1;
                         drivetrain.holdPoint(holdPoint.toPose(Math.toRadians(180)));
 
-                        grabFromSubmersibleState = RRLeft0plus7Auto.GrabFromSubmersibleState.RESETTING;
+                        grabFromSubmersibleState = RRTest.GrabFromSubmersibleState.RESETTING;
                     }
                     break;
                 case RESETTING:
                     if (drivetrain.getHoldPointError().minimizeHeading(Math.PI, -Math.PI).inRange(new com.reefsharklibrary.data.Pose2d(1, 1, Math.toRadians(3.5)))) {
-                        grabFromSubmersibleState = RRLeft0plus7Auto.GrabFromSubmersibleState.SEARCHING;
+                        grabFromSubmersibleState = RRTest.GrabFromSubmersibleState.SEARCHING;
                         extensionDistance = 1;
                     }
                     break;

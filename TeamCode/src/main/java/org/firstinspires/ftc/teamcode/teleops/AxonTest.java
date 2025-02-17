@@ -170,9 +170,12 @@ public class AxonTest extends LinearOpMode {
 //            }
 //
             if (gamepad2.a) {
-                leftSpinnerServo.setPower(.6);
-                rightSpinnerServo.setPower(.6);
-            }  else {
+                leftSpinnerServo.setPower(1);
+                rightSpinnerServo.setPower(1);
+            }  else if(gamepad2.y) {
+                leftSpinnerServo.setPower(-1);
+                rightSpinnerServo.setPower(-1);
+            } else {
                 leftSpinnerServo.setPower(0);
                 rightSpinnerServo.setPower(0);
             }
@@ -266,18 +269,18 @@ public class AxonTest extends LinearOpMode {
 
 
     }
-    double getServoBusCurrent()
+    public double getServoBusCurrent()
     {
 
-        try
-        {
-            servoResponse = servoCommand.sendReceive();
-            return servoResponse.getValue() / 1000.0;    // return value in Amps
+        try {
+            LynxGetADCCommand.Channel servoChannel = LynxGetADCCommand.Channel.SERVO_CURRENT;
+            LynxGetADCCommand servoCommand = new LynxGetADCCommand(myRevHub, servoChannel, LynxGetADCCommand.Mode.ENGINEERING);
+
+            return servoCommand.sendReceive().getValue() / 1000.0;
+        } catch (InterruptedException | RuntimeException | LynxNackException e) {
+
         }
-        catch (InterruptedException | RuntimeException | LynxNackException e)
-        {
-        }
-        return 999;
+        return 0;
     }
 
 }

@@ -1,21 +1,15 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
 import static org.firstinspires.ftc.teamcode.util.MathUtil.robotToIntakePos;
-import static org.firstinspires.ftc.teamcode.util.MathUtil.toReefSharkPose;
 
 import com.acmerobotics.dashboard.canvas.Canvas;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.ftc.GoBildaPinpointDriver;
-import com.acmerobotics.roadrunner.ftc.GoBildaPinpointDriverRR;
-import com.acmerobotics.roadrunner.ftc.LazyImu;
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.reefsharklibrary.data.MotorPowers;
-import com.reefsharklibrary.data.PIDCoeficients;
 import com.reefsharklibrary.data.Pose2d;
 import com.reefsharklibrary.data.Vector2d;
 import com.reefsharklibrary.misc.ElapsedTimer;
@@ -23,8 +17,6 @@ import com.reefsharklibrary.pathing.PIDPointController;
 import com.reefsharklibrary.robotControl.ReusableHardwareAction;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.roadrunner.MecanumDrive2;
-import org.firstinspires.ftc.teamcode.roadrunner.MecanumDrive3;
 import org.firstinspires.ftc.teamcode.roadrunner.PinpointDrive;
 import org.firstinspires.ftc.teamcode.util.DashboardUtil;
 import org.firstinspires.ftc.teamcode.util.RobotConstants;
@@ -84,7 +76,7 @@ public class NewDrivetrain extends SubSystem {
 
 //    private final TrajectorySequenceRunner runner;
 
-    private Pose2d roadRunnerPoseEstimate;
+    private Pose2d roadRunnerPoseEstimate = new Pose2d(0, 0, 0);
     private Pose2d roadRunnerPoseVelocity = new Pose2d(0, 0, 0);
 //    private Pose2d poseAcceleration;
 
@@ -93,6 +85,8 @@ public class NewDrivetrain extends SubSystem {
 
     private final Telemetry.Item roadRunnerPos;
     private final Telemetry.Item roadRunnerVel;
+
+    private final Telemetry.Item pinPointCookedTelem;
 
     private final NewIntake intake;
 //    private final Telemetry.Item driveTrainLoopTime;
@@ -145,7 +139,7 @@ public class NewDrivetrain extends SubSystem {
 
         this.drive = new PinpointDrive(hardwareMap, new com.acmerobotics.roadrunner.Pose2d(0, 0, 0));
 
-        pidPointController = new PIDPointController(RobotConstants.pointPID, RobotConstants.headingPID, RobotConstants.trackWidth, RobotConstants.f);
+        pidPointController = new PIDPointController(RobotConstants.pointPID, RobotConstants.headingPID, RobotConstants.trackWidth, RobotConstants.lateralF, RobotConstants.headingF);
 
         batteryVoltageSensor = hardwareMap.voltageSensor.iterator().next();
 
@@ -157,13 +151,7 @@ public class NewDrivetrain extends SubSystem {
 
         followState = telemetry.addData("Follow state", "");
 
-//        targetMotionState = telemetry.addData("Motion state", "");
-
-//        forwardComponentTelemetry = telemetry.addData("Forward component", "");
-
-//        radiansPerInch = telemetry.addData("rad per inch", "");
-
-//        driveTrainLoopTime = telemetry.addData("Drivetrain loop time", "");
+        pinPointCookedTelem = telemetry.addData("Pinpoint cooked", this.drive.pinpoint.isPinpointCooked());
     }
 
     @Override
@@ -190,13 +178,6 @@ public class NewDrivetrain extends SubSystem {
 
 //        intakeDistance = 9.59029;
 
-        roadRunnerPoseEstimate = new Pose2d(drive.pose.position.x, drive.pose.position.y, drive.pose.heading.toDouble());  lineNumber.set(193);
-
-        roadRunnerPoseVelocity = new Pose2d(drive.getVelocity().linearVel.x, drive.getVelocity().linearVel.y, drive.getVelocity().angVel);
-
-        roadRunnerPos.setValue(roadRunnerPoseEstimate); lineNumber.set(196);
-        roadRunnerVel.setValue(roadRunnerPoseVelocity); lineNumber.set(197);
-
 
         if (voltageUpdateTimer.milliSeconds()>200) {
             voltageSensorHardwareAction.setAndQueueIfEmpty(() -> {
@@ -208,32 +189,51 @@ public class NewDrivetrain extends SubSystem {
         switch (driveState) {
             case FOLLOW_PATH:
                 lineNumber.set(210);
+
                 if (followPath) {
+                    lineNumber.set(213);
                     packet = new TelemetryPacket();
                     packet.fieldOverlay().getOperations().addAll(canvas.getOperations());
 
                     followPath = path.run(packet);
+                    lineNumber.set(217);
 
+                    if (!holdPoint) {
+                        lineNumber.set(220);
+                        setDrivePower(drive.getDrivePowers());
+                    } else {
+                        lineNumber.set(223);
+                        drive.updatePoseEstimate();
+                    }
 
-                    setDrivePower(drive.getDrivePowers());
                     followState.setValue("FOLLOW");
                 } else {
+                    lineNumber.set(229);
                     drive.updatePoseEstimate();
-                    roadRunnerPoseEstimate = new Pose2d(drive.pose.position.x, drive.pose.position.y, drive.pose.heading.toDouble());
-
-                    if (holdPoint) {
-                        MotorPowers motorPowers = new MotorPowers();
-                        pidPointController.calculatePowers(roadRunnerPoseEstimate, roadRunnerPoseVelocity, targetHoldPoint, motorPowers);
-                        setDrivePower(motorPowers.getNormalizedVoltages(voltage));
-                    }
                 }
-                lineNumber.set(230);
+
+                roadRunnerPoseEstimate = new Pose2d(drive.pose.position.x, drive.pose.position.y, drive.pose.heading.toDouble());  lineNumber.set(193);
+                roadRunnerPoseVelocity = new Pose2d(drive.getVelocity().linearVel.x, drive.getVelocity().linearVel.y, drive.getVelocity().angVel);
+
+                lineNumber.set(236);
+                if (holdPoint) {
+                    MotorPowers motorPowers = new MotorPowers();
+                    pidPointController.calculatePowers(roadRunnerPoseEstimate, roadRunnerPoseVelocity, targetHoldPoint, motorPowers);
+                    setDrivePower(motorPowers.getNormalizedVoltages(voltage));
+                }
+
+                lineNumber.set(243);
                 break;
             case DRIVER_CONTROL:
-                lineNumber.set(233);
+                lineNumber.set(246);
                 followState.setValue("DRIVER");
 
                 drive.updatePoseEstimate();
+
+                lineNumber.set(251);
+                roadRunnerPoseEstimate = new Pose2d(drive.pose.position.x, drive.pose.position.y, drive.pose.heading.toDouble());  lineNumber.set(193);
+                roadRunnerPoseVelocity = new Pose2d(drive.getVelocity().linearVel.x, drive.getVelocity().linearVel.y, drive.getVelocity().angVel);
+
 
                 double relativeHeading = roadRunnerPoseEstimate.getHeading()-headingOffset;
 
@@ -262,8 +262,8 @@ public class NewDrivetrain extends SubSystem {
                     turn = 0;
                 }
 
-                lineNumber.set(265);
-                powers.addHeading(turn); lineNumber.set(266);
+                lineNumber.set(283);
+                powers.addHeading(turn); lineNumber.set(284);
 
                 if (fieldCentric) {
                     //converting to field centric
@@ -271,7 +271,7 @@ public class NewDrivetrain extends SubSystem {
 
                 } else {
                     powers.addVector(new Vector2d(forward, strafing));
-                } lineNumber.set(274);
+                } lineNumber.set(292);
 
 
                 //driving settings
@@ -285,13 +285,20 @@ public class NewDrivetrain extends SubSystem {
                     fieldCentric = true;
                 }
 
-                lineNumber.set(288);
-                setDrivePower(powers); lineNumber.set(289);
+                lineNumber.set(306);
+                setDrivePower(powers); lineNumber.set(307);
 
                 break;
         }
-        lineNumber.set(293);
-        motorPowerTelemetry.setValue(drive.getDrivePowers()); lineNumber.set(294);
+
+        roadRunnerPos.setValue(roadRunnerPoseEstimate); lineNumber.set(312);
+        roadRunnerVel.setValue(roadRunnerPoseVelocity); lineNumber.set(313);
+
+        pinPointCookedTelem.setValue(this.drive.pinpoint.isPinpointCooked());
+
+
+        lineNumber.set(318);
+        motorPowerTelemetry.setValue(drive.getDrivePowers()); lineNumber.set(319);
 
     }
 
@@ -410,5 +417,9 @@ public class NewDrivetrain extends SubSystem {
 
     public Pose2d getHoldPointError() {
         return targetHoldPoint.minus(roadRunnerPoseEstimate);
+    }
+
+    public void stopFollowPath() {
+        followPath = false;
     }
 }

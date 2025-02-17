@@ -22,7 +22,7 @@ public class OpenCVTestTele extends LinearOpMode {
         VectorFieldIntakePipeline pipeline = new VectorFieldIntakePipeline();
 
         pipeline.setBlueAlliance(true);
-        pipeline.setDisplayType(VectorFieldIntakePipeline.DisplayType.BLOCK_VECTOR_FIELD);
+        pipeline.setDisplayType(VectorFieldIntakePipeline.DisplayType.RAW_CAMERA);
         // copy and pasted from last year's code, im not sure what "robot" or "hwMap" is this yr
         webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "camera"));
         webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {

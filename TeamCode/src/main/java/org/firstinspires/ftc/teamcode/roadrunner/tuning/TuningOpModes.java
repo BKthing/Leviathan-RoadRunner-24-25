@@ -49,8 +49,8 @@ public final class TuningOpModes {
 
                     List<Encoder> leftEncs = new ArrayList<>(), rightEncs = new ArrayList<>();
                     List<Encoder> parEncs = new ArrayList<>(), perpEncs = new ArrayList<>();
-                    parEncs.add(new PinpointEncoder(pd.pinpoint,false, pd.leftBack));
-                    perpEncs.add(new PinpointEncoder(pd.pinpoint,true, pd.leftBack));
+//                    parEncs.add(new PinpointEncoder(pd.pinpoint,false, pd.leftBack));
+//                    perpEncs.add(new PinpointEncoder(pd.pinpoint,true, pd.leftBack));
 
                     return new DriveView(
                             DriveType.MECANUM,
