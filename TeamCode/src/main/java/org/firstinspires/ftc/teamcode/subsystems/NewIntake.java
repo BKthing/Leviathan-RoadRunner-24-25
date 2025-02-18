@@ -119,6 +119,7 @@ public class NewIntake extends SubSystem {
     SampleColor sampleColor = SampleColor.NONE;
 
     public enum ToIntakeState {
+        EXTEND_THEN_DROP_INTAKE,
         DROP_INTAKE,
         RAISE_INTAKE,
         PARTIAL_RAISE_INTAKE,
@@ -207,7 +208,8 @@ public class NewIntake extends SubSystem {
 
     private final boolean teleOpControls;
 
-    NormalizedRGBA colors;
+    NormalizedRGBA colors = new NormalizedRGBA();
+
     NormalizedRGBA newColors;
 
     private boolean nextCheckColor = false;
@@ -283,6 +285,12 @@ public class NewIntake extends SubSystem {
             leftIntakeServo.setPosition(targetIntakePos);
             rightIntakeServo.setPosition(targetIntakePos);
         }
+
+        colors.red = 0;
+        colors.green = 0;
+        colors.blue = 0;
+
+        newColors = colors;
 
         leftSpinnerServo = hardwareMap.get(CRServo.class, "leftSpinnerServo");
         rightSpinnerServo = hardwareMap.get(CRServo.class, "rightSpinnerServo");
@@ -463,6 +471,11 @@ public class NewIntake extends SubSystem {
         }
 
         switch (toIntakeState) {
+            case EXTEND_THEN_DROP_INTAKE:
+                intakeState = IntakeState.EXTENDING;
+
+                toIntakeState = ToIntakeState.IDLE;
+                break;
             case DROP_INTAKE:
                 targetIntakePos = IntakePos.DOWN.pos;
 
@@ -487,7 +500,7 @@ public class NewIntake extends SubSystem {
                 break;
             case SEARCH_POSITION:
                 targetIntakePos = IntakePos.SEARCH.pos;
-                targetSlidePos = 1;
+                targetSlidePos = 3;
                 targetIntakeSpeed = 0;
 
                 toIntakeState = ToIntakeState.IDLE;
@@ -595,20 +608,20 @@ public class NewIntake extends SubSystem {
                     sampleColor = findSampleColor();
 
                     if (blueAlliance == null || (sampleColor == SampleColor.NONE && colorReads > 4)) {
-                        throw new RuntimeException("Not nothing " + colors.red + " " + colors.green + " " + colors.blue);
+//                        throw new RuntimeException("Not nothing " + colors.red + " " + colors.green + " " + colors.blue);
 
-//                        targetIntakePos = IntakePos.UP.pos;
-//
-//                        intakeState = IntakeState.RETRACTING_INTAKE;
-//
-//                        intakingState = IntakingState.INTAKING_A_LITTLE_MORE;
-//
-//                        intakingTimer.reset();
-//                        intakeTimer.reset();
-//
-//                        checkColor = false;
-//
-//                        break;
+                        targetIntakePos = IntakePos.UP.pos;
+
+                        intakeState = IntakeState.RETRACTING_INTAKE;
+
+                        intakingState = IntakingState.INTAKING_A_LITTLE_MORE;
+
+                        intakingTimer.reset();
+                        intakeTimer.reset();
+
+                        checkColor = false;
+
+                        break;
                     }
 
                     if (sampleColor == SampleColor.NONE) {
@@ -619,11 +632,11 @@ public class NewIntake extends SubSystem {
                         break;
                     }
 
-                    if (sampleColor == SampleColor.RED) {
-                        throw new RuntimeException("Not red " + colors.red + " " + colors.green + " " + colors.blue);
-                    } else if (sampleColor == SampleColor.YELLOW) {
-                        throw new RuntimeException("Not yellow " + colors.red + " " + colors.green + " " + colors.blue);
-                    }
+//                    if (sampleColor == SampleColor.RED) {
+//                        throw new RuntimeException("Not red " + colors.red + " " + colors.green + " " + colors.blue);
+//                    } else if (sampleColor == SampleColor.YELLOW) {
+//                        throw new RuntimeException("Not yellow " + colors.red + " " + colors.green + " " + colors.blue);
+//                    }
 
                     checkColor = false;
 
@@ -646,14 +659,14 @@ public class NewIntake extends SubSystem {
                 }
                 break;
             case INTAKING_A_LITTLE_MORE:
-                if (intakingTimer.seconds()>.2) {
+                if (intakingTimer.seconds()>.3) {
                     targetIntakeSpeed = -1;
                     intakingTimer.reset();
                     intakingState = IntakingState.INTAKING_SPIN_OUT;
                 }
                 break;
             case INTAKING_SPIN_OUT:
-                if (intakingTimer.seconds()>.06) {
+                if (intakingTimer.seconds()>.1) {
                     targetIntakeSpeed = 1;
                     intakingTimer.reset();
                     intakingState = IntakingState.FINISH_INTAKING;
@@ -792,8 +805,9 @@ public class NewIntake extends SubSystem {
             case EXTENDING:
                 //if slides past bar or need to be dropped
                 //add more logic
-                if (slidePos>10) {
+                if (slidePos>2) {
                     targetIntakePos = IntakePos.DOWN.pos;
+//                    intakeState = IntakeState.INTAKING;
                     intakeTimer.reset();
 
                     intakeState = IntakeState.DROPPING_INTAKE;
@@ -1028,5 +1042,15 @@ public class NewIntake extends SubSystem {
         } else {
             return 4.125;
         }
+    }
+
+    public void overrideSpinOut() {
+        leftSpinnerServo.setPower(-1);
+        rightSpinnerServo.setPower(-1);
+    }
+
+    public void stopMotors() {
+        horizontalLeftMotor.setPower(0);
+        horizontalRightMotor.setPower(0);
     }
 }

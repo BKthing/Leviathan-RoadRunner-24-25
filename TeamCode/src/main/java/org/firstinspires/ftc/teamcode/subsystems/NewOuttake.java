@@ -165,6 +165,7 @@ public class NewOuttake extends SubSystem {
         MID_POSITION_CUTOFF(.55 - .042),
         WAITING_FOR_HANG_DEPLOY(.363),//.42
         // hello brett my king
+        INIT(.37),
         TRANSFER(.446), //.444
         GRAB_BACK(.63 - .042),
         WAIT_PLACE_BACK(.14 - .042),
@@ -180,13 +181,13 @@ public class NewOuttake extends SubSystem {
         }
     }
 
-    private double targetV4BPos = V4BarPos.IDLE_POSITION.pos;
+    private double targetV4BPos = V4BarPos.INIT.pos;
 
     private double actualV4BPos = targetV4BPos;//set to -1 so target will never == actual on first loop
 
 
     public enum ClawPitch {
-        DOWN(.37 - .019),
+        DOWN(.38 - .019),
         BACK(0.09 - .019),
         BACK_ANGLED_DOWN(.19 - .019),
         BACK2(1 - .019),
@@ -345,8 +346,8 @@ public class NewOuttake extends SubSystem {
         newTargetSlidePos = targetSlidePos;
 
         if (init) {
-//            leftOuttakeServo.setPosition(targetV4BPos);
-//            rightOuttakeServo.setPosition(targetV4BPos);
+            leftOuttakeServo.setPosition(targetV4BPos);
+            rightOuttakeServo.setPosition(targetV4BPos);
 
             clawPitchServo.setPosition(targetClawPitch);
 
@@ -1212,11 +1213,19 @@ public class NewOuttake extends SubSystem {
         }
     }
 
+    private void setOuttakeState(OuttakeState outtakeState) {
+        this.outtakeState = outtakeState;
+    }
+
     private void toSlidePosConstantVel(double targetSlidePos, double targetVel) {
         slideProfile = true;
         slideVel = targetSlidePos < this.targetSlidePos ? -targetVel : targetVel;
         targetMotionProfilePos = targetSlidePos;
     }
 
+    public void stopMotors() {
+        verticalLeftMotor.setPower(0);
+        verticalRightMotor.setPower(0);
+    }
 
 }

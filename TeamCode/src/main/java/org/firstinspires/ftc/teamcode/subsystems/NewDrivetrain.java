@@ -104,6 +104,8 @@ public class NewDrivetrain extends SubSystem {
     private Pose2d targetHoldPoint = new Pose2d(0, 0, 0);
     private boolean holdPoint = false;
 
+    private boolean pinpointWasCooked = false;
+
     public AtomicInteger lineNumber = new AtomicInteger();
 
     public NewDrivetrain(SubSystemData data, NewIntake intake) {
@@ -222,13 +224,20 @@ public class NewDrivetrain extends SubSystem {
                     setDrivePower(motorPowers.getNormalizedVoltages(voltage));
                 }
 
+                if (this.drive.pinpoint.isPinpointCooked() && pinpointWasCooked) {
+                    throw new RuntimeException("Pinpoint cooked in auto");
+                }
+
+                pinpointWasCooked = this.drive.pinpoint.isPinpointCooked();
+                pinPointCookedTelem.setValue(pinpointWasCooked);
+
                 lineNumber.set(243);
                 break;
             case DRIVER_CONTROL:
                 lineNumber.set(246);
                 followState.setValue("DRIVER");
 
-                drive.updatePoseEstimate();
+//                drive.updatePoseEstimate();
 
                 lineNumber.set(251);
                 roadRunnerPoseEstimate = new Pose2d(drive.pose.position.x, drive.pose.position.y, drive.pose.heading.toDouble());  lineNumber.set(193);
@@ -293,8 +302,6 @@ public class NewDrivetrain extends SubSystem {
 
         roadRunnerPos.setValue(roadRunnerPoseEstimate); lineNumber.set(312);
         roadRunnerVel.setValue(roadRunnerPoseVelocity); lineNumber.set(313);
-
-        pinPointCookedTelem.setValue(this.drive.pinpoint.isPinpointCooked());
 
 
         lineNumber.set(318);
@@ -421,5 +428,12 @@ public class NewDrivetrain extends SubSystem {
 
     public void stopFollowPath() {
         followPath = false;
+    }
+
+    public void stopMotors() {
+        frontLeft.setPower(0);
+        backLeft.setPower(0);
+        backRight.setPower(0);
+        frontRight.setPower(0);
     }
 }

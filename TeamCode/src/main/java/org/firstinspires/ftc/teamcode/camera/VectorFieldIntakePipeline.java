@@ -78,6 +78,8 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
 
     public AtomicBoolean hasSample = new AtomicBoolean();
 
+    public AtomicBoolean reCenter = new AtomicBoolean();
+
     private boolean hasSampleValue = false;
 
     private final Scalar
@@ -110,6 +112,7 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
     }
 
     private Mat process(Mat input) {
+
         Imgproc.blur(input, blurred, new Size(7, 7));
 
         Imgproc.cvtColor(blurred, hsvMat, Imgproc.COLOR_RGB2HSV);
@@ -194,6 +197,10 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
                 //                output.setTo(blockVectorField);
                 Imgproc.cvtColor(blockVectorField, output, COLOR_GRAY2BGR);
                 //                blockVectorField.convertTo(output, COLOR_GRAY2BGR);
+                if (reCenter.compareAndSet(true, false)) {
+                    intakePoint = new Vector2d(cameraColumns/2, cameraRows/2);
+                }
+
                 intakePoint = searchField(blockVectorField, intakePoint, 64);
 
                 if (safeGetMat(blockPullVectorField, intakePoint.getX(), intakePoint.getY()) < 140) {

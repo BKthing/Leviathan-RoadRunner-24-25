@@ -210,20 +210,17 @@ public class RRTest extends LinearOpMode {
         };
 
 
-        Action moveToScoreFromSubmersible1 = drivetrain.drive.actionBuilder(new Pose2d(22, 10, Math.toRadians(180)))
-                .setTangent(Math.toRadians(0))
-                .afterTime(0, () -> {
-                    drivetrain.cancelHoldPoint();
-                })
-                .splineTo(new Vector2d(54, 54), Math.toRadians(60), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-40, PARAMS.maxProfileAccel))
+        Action scoreBasket = drivetrain.drive.actionBuilder(new Pose2d(-10, 56, Math.toRadians(180)))
+                .lineToXLinearHeading(55, Math.toRadians(189), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(80))), new ProfileAccelConstraint(-40, 75))
                 .build();
 
-        Action moveToScoreFromSubmersible2 = drivetrain.drive.actionBuilder(new Pose2d(22, 10, Math.toRadians(180)))
-                .setTangent(Math.toRadians(0))
-                .afterTime(0, () -> {
-                    drivetrain.cancelHoldPoint();
+        Action moveToPark = drivetrain.drive.actionBuilder(new Pose2d(10, 56, Math.toRadians(180)))
+                .setTangent(Math.toRadians(180))
+                .afterTime(.6, () -> {
+                    intake.setTargetSlidePos(18.5);
+                    intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
                 })
-                .splineTo(new Vector2d(54, 54), Math.toRadians(60), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-40, PARAMS.maxProfileAccel))
+                .lineToXConstantHeading(14, new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(80))), new ProfileAccelConstraint(-60, 75))
                 .build();
 
 
@@ -252,12 +249,20 @@ public class RRTest extends LinearOpMode {
             }
         };
 
+        drivetrain.drive.setPoseEstimate(new Pose2d(1, 1, 0));
+        drivetrain.drive.pinpoint.update();
+
+        if (drivetrain.drive.pinpoint.isPinpointCooked()) {
+            throw new RuntimeException("pinpoint cooked");
+        }
 
         waitForStart();
 
         totalAutoTimer.reset();
 
-        drivetrain.drive.setPoseEstimate(new Pose2d(62.5, 55, Math.toRadians(270)));
+        drivetrain.drive.setPoseEstimate(new Pose2d(-10, 56, Math.toRadians(180)));
+
+        outtake.toOuttakeState(NewOuttake.ToOuttakeState.RETRACT_FROM_PLACE_BEHIND);
 
         masterThread.clearBulkCache();
 
@@ -265,34 +270,11 @@ public class RRTest extends LinearOpMode {
 //        outtake.toOuttakeState(NewOuttake.ToOuttakeState.PLACE_BEHIND);
 
         drivetrain.followPath(new SequentialAction(
-                new RunToTimeThreshold(
-                        new SequentialAction(
-//                                preload,
-//                                new ScoreBlock(),
-//                                moveToGrabBlock1,
-//                                intakeBlock,
-//                                moveToScoreBlock1,
-//                                new ScoreBlock(),
-//                                moveToGrabBlock2,
-//                                intakeBlock,
-//                                moveToScoreBlock2,
-//                                new ScoreBlock(),
-//                                moveToGrabBlock3,
-//                                intakeBlock,
-//                                moveToScoreBlock3,
-//                                new ScoreBlock(),
-                                moveToSubmersible1,
-                                new SleepAction(.8),
-//                                new GrabFromSubmersible(),
-                                moveToScoreFromSubmersible1,
-//                                new ScoreBlock()
-                                moveToSubmersible2,
-                                new SleepAction(.8),
-                                moveToScoreFromSubmersible2
-//                                moveToScoreFromSubmersible2
-                        )
-                ),
-                park
+                new SequentialAction(
+                    scoreBasket,
+                    moveToPark
+                )
+
         ));
 
         while ( !isStopRequested()) {

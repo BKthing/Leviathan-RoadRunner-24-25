@@ -160,6 +160,13 @@ public class RRLeft1plus3Auto extends LinearOpMode {
                 .splineToLinearHeading(new Pose2d(20, 6, Math.toRadians(180)), Math.toRadians(180))
                 .build();
 
+        drivetrain.drive.setPoseEstimate(new Pose2d(1, 1, 0));
+        drivetrain.drive.pinpoint.update();
+
+        if (drivetrain.drive.pinpoint.isPinpointCooked()) {
+            throw new RuntimeException("pinpoint cooked");
+        }
+
         waitForStart();
 
         drivetrain.drive.setPoseEstimate(new Pose2d(16.8, 62.1, Math.toRadians(270)));

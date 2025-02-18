@@ -39,6 +39,8 @@ public class VisionSubsystem extends SubSystem {
 
     private boolean hasSampleVal = false;
 
+    private boolean recenter = false;
+
 
 
     public VisionSubsystem(NewDrivetrain drivetrain, SubSystemData data, Boolean blueAlliance) {
@@ -80,6 +82,11 @@ public class VisionSubsystem extends SubSystem {
 
     @Override
     public void loop() {
+        if (recenter) {
+            recenter = false;
+            pipeline.reCenter.set(true);
+        }
+
         Vector2d relCords = hasSampleVal ? pixelToRelFieldCords(pipeline.getTargetBlockPixels()) : new Vector2d(0, 0);
 
         targetSamplePose = intakePose.getVector2d().plus(relCords.rotate(intakePose.getHeading()));
@@ -147,5 +154,9 @@ public class VisionSubsystem extends SubSystem {
 
     public Vector2d getSampleRobotDiff() {
         return sampleRobotDiff;
+    }
+
+    public void recenter() {
+        recenter = true;
     }
 }
