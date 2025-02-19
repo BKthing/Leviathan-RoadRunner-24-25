@@ -231,7 +231,7 @@ public class RRRight5plus1Auto extends LinearOpMode {
         drivetrain.drive.setPoseEstimate(new Pose2d(1, 1, 0));
         drivetrain.drive.pinpoint.update();
 
-        if (drivetrain.drive.pinpoint.isPinpointCooked()) {
+        if (drivetrain.drive.pinpoint.fastIsPinpointCooked()) {
             throw new RuntimeException("pinpoint cooked");
         }
 

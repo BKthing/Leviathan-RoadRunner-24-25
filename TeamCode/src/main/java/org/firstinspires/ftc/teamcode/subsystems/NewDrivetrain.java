@@ -5,7 +5,6 @@ import static org.firstinspires.ftc.teamcode.util.MathUtil.robotToIntakePos;
 import com.acmerobotics.dashboard.canvas.Canvas;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -256,24 +255,20 @@ public class NewDrivetrain extends SubSystem {
                         break;
                 }
 
-                lineNumber.set(258);
                 if (this.drive.pinpoint.fastIsPinpointCooked() && pinpointWasCooked) {
                     throw new RuntimeException("Pinpoint cooked in auto");
                 }
-                lineNumber.set(262);
 
                 pinpointWasCooked = this.drive.pinpoint.fastIsPinpointCooked();
                 pinPointCookedTelem.setValue(pinpointWasCooked);
 
                 lineNumber.set(243);
-
-                followState.setValue("FOLLOW, HoldPoint state: " + holdPointState.toString());
-
                 break;
             case DRIVER_CONTROL:
-//                drive.updatePoseEstimate();
                 lineNumber.set(246);
                 followState.setValue("DRIVER");
+
+//                drive.updatePoseEstimate();
 
                 lineNumber.set(251);
                 roadRunnerPoseEstimate = new Pose2d(drive.pose.position.x, drive.pose.position.y, drive.pose.heading.toDouble());  lineNumber.set(193);
@@ -336,7 +331,6 @@ public class NewDrivetrain extends SubSystem {
                 break;
         }
 
-
         roadRunnerPos.setValue(roadRunnerPoseEstimate); lineNumber.set(312);
         roadRunnerVel.setValue(roadRunnerPoseVelocity); lineNumber.set(313);
 
@@ -344,8 +338,6 @@ public class NewDrivetrain extends SubSystem {
         lineNumber.set(318);
         motorPowerTelemetry.setValue(drive.getDrivePowers()); lineNumber.set(319);
 
-
-        driveTrainLoopTime.setValue(driveTrainLoopTimer.milliSeconds());
     }
 
     @Override

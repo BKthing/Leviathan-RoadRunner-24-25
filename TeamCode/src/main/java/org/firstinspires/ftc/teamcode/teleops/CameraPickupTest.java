@@ -104,7 +104,7 @@ public class CameraPickupTest extends LinearOpMode {
                 vision
         );
 
-        if (drivetrain.drive.pinpoint.isPinpointCooked()) {
+        if (drivetrain.drive.pinpoint.fastIsPinpointCooked()) {
             throw new RuntimeException("pinpoint cooked");
         }
 
