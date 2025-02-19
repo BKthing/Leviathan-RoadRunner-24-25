@@ -104,9 +104,6 @@ public class CameraPickupTest extends LinearOpMode {
                 vision
         );
 
-        drivetrain.drive.setPoseEstimate(new Pose2d(1, 1, 0));
-        drivetrain.drive.pinpoint.update();
-
         if (drivetrain.drive.pinpoint.isPinpointCooked()) {
             throw new RuntimeException("pinpoint cooked");
         }
@@ -126,7 +123,10 @@ public class CameraPickupTest extends LinearOpMode {
                 intake.toIntakeState(NewIntake.ToIntakeState.SEARCH_POSITION);
                 vision.recenter();
                 drivetrain.holdPoint(holdPoint.toPose(Math.toRadians(180)));
+            } else if (gamepad1.y) {
+                drivetrain.cancelHoldPoint();
             }
+
 
             if (gamepad1.b) {
                 prevHeading = drivetrain.getPoseEstimate().getHeading();
@@ -134,10 +134,6 @@ public class CameraPickupTest extends LinearOpMode {
 //                grabFromSubmersible = new GrabFromSubmersible();
 //                runAction = true;
                 autoTimer.reset();
-            }
-
-            if (gamepad1.x) {
-                drivetrain.holdPoint(new com.reefsharklibrary.data.Pose2d(0, 0, Math.toRadians(180)));
             }
 
 //            if (runAction) {

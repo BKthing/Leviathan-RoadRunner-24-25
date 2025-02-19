@@ -43,7 +43,7 @@ public class CustomPinpointDriver {
 //        if (PinpointConstants.useCustomEncoderResolution) {
 //            this.odo.setEncoderResolution(PinpointConstants.customEncoderResolution);
 //        } else {
-            this.odo.setEncoderResolution(params.encoderResolution);
+        this.odo.setEncoderResolution(params.encoderResolution);
 //        }
 
         this.odo.setEncoderDirections(params.xDirection, params.yDirection);
@@ -94,7 +94,7 @@ public class CustomPinpointDriver {
         this.totalHeading += Rotation.inRange(currentPinpointPose.heading.toDouble()-this.previousHeading, Math.PI, -Math.PI);//MathFunctions.getSmallestAngleDifference(currentPinpointPose.getHeading(), this.previousHeading);
         this.previousHeading = currentPinpointPose.heading.toDouble();
         Pose2d deltaPose = MathUtil.toRoadRunnerPose(MathUtil.toReefSharkPose(currentPinpointPose).minus(MathUtil.toReefSharkPose(this.pinpointPose)));// MathFunctions.subtractPoses(currentPinpointPose, this.pinpointPose);
-        this.currentVelocity = new PoseVelocity2d(new Vector2d(deltaPose.position.x / (double) this.deltaTimeNano / Math.pow(10.0, 9.0), deltaPose.position.y / (double) this.deltaTimeNano / Math.pow(10.0, 9.0)), deltaPose.heading.toDouble() / (double) this.deltaTimeNano / Math.pow(10.0, 9.0));// new Pose(deltaPose.getX() / ((double)this.deltaTimeNano / Math.pow(10.0, 9.0)), deltaPose.getY() / ((double)this.deltaTimeNano / Math.pow(10.0, 9.0)), deltaPose.getHeading() / ((double)this.deltaTimeNano / Math.pow(10.0, 9.0)));
+        this.currentVelocity = new PoseVelocity2d(new Vector2d(deltaPose.position.x / ((double) this.deltaTimeNano / Math.pow(10.0, 9.0)), deltaPose.position.y / ((double) this.deltaTimeNano / Math.pow(10.0, 9.0))), deltaPose.heading.toDouble() / ((double) this.deltaTimeNano / Math.pow(10.0, 9.0)));// new Pose(deltaPose.getX() / ((double)this.deltaTimeNano / Math.pow(10.0, 9.0)), deltaPose.getY() / ((double)this.deltaTimeNano / Math.pow(10.0, 9.0)), deltaPose.getHeading() / ((double)this.deltaTimeNano / Math.pow(10.0, 9.0)));
         this.pinpointPose = currentPinpointPose;
     }
 
@@ -136,13 +136,15 @@ public class CustomPinpointDriver {
     private Pose2d getPoseEstimate(Pose2D pinpointEstimate, Pose2d currentPose, long deltaTime) {
         if (!Double.isNaN(pinpointEstimate.getX(DistanceUnit.INCH)) && !Double.isNaN(pinpointEstimate.getY(DistanceUnit.INCH)) && !Double.isNaN(pinpointEstimate.getHeading(AngleUnit.RADIANS))) {
             Pose2d estimate = new Pose2d(pinpointEstimate.getX(DistanceUnit.INCH), pinpointEstimate.getY(DistanceUnit.INCH), pinpointEstimate.getHeading(AngleUnit.RADIANS));
-            if (roughlyEquals(estimate, new Pose2d(0, 0, 0), 0.002)) {
-                this.pinpointCooked = true;
-                return MathUtil.toRoadRunnerPose(MathUtil.toReefSharkPose(currentPose).plus(MathUtil.toReefSharkPose(this.currentVelocity).scale((double)deltaTime / Math.pow(10.0, 9.0))));
-            } else {
-                this.pinpointCooked = false;
-                return estimate;
-            }
+            pinpointCooked = false;
+            return estimate;
+            //            if (roughlyEquals(estimate, new Pose2d(0, 0, 0), 0.002)) {
+//                this.pinpointCooked = true;
+//                return MathUtil.toRoadRunnerPose(MathUtil.toReefSharkPose(currentPose).plus(MathUtil.toReefSharkPose(this.currentVelocity).scale((double)deltaTime / Math.pow(10.0, 9.0))));
+//            } else {
+//                this.pinpointCooked = false;
+//                return estimate;
+//            }
         } else {
             this.pinpointCooked = true;
             return MathUtil.toRoadRunnerPose(MathUtil.toReefSharkPose(currentPose).plus(MathUtil.toReefSharkPose(this.currentVelocity).scale((double)deltaTime / Math.pow(10.0, 9.0))));
@@ -150,6 +152,18 @@ public class CustomPinpointDriver {
     }
 
     public boolean isPinpointCooked() {
+        Pose2d prevPoseEstimate = pinpointPose;
+        odo.setPosition(new Pose2D(DistanceUnit.INCH, 1, 1, AngleUnit.RADIANS, 1));
+        Pose2D newPose =  odo.getPosition();
+        if (!Double.isNaN(newPose.getX(DistanceUnit.INCH)) && !Double.isNaN(newPose.getY(DistanceUnit.INCH)) && !Double.isNaN(newPose.getHeading(AngleUnit.RADIANS)) && new com.reefsharklibrary.data.Pose2d(newPose.getX(DistanceUnit.INCH), newPose.getY(DistanceUnit.INCH), newPose.getHeading(AngleUnit.RADIANS)).minus(MathUtil.toReefSharkPose(prevPoseEstimate)).minimizeHeading(Math.PI, -Math.PI).inRange(new com.reefsharklibrary.data.Pose2d(.1, .1, .1))) {
+            setPose(prevPoseEstimate);
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    public boolean fastIsPinpointCooked() {
         return this.pinpointCooked;
     }
 

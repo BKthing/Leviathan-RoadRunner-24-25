@@ -126,6 +126,7 @@ public class NewIntake extends SubSystem {
         RAISE_TO_AUTO_HEIGHT,
         SEARCH_POSITION,
         RETRACT,
+        RETRACT_AND_STOP_INTAKING,
         IDLE
     }
 
@@ -513,6 +514,17 @@ public class NewIntake extends SubSystem {
 
                 toIntakeState = ToIntakeState.IDLE;
                 break;
+            case RETRACT_AND_STOP_INTAKING:
+                targetIntakeSpeed = 0;
+                intakingState = IntakingState.IDLE;
+
+                targetIntakePos = IntakePos.UP.pos;
+                intakeTimer.reset();
+
+                intakeState = IntakeState.RETRACTING_INTAKE;
+
+                toIntakeState = ToIntakeState.IDLE;
+                break;
 
 
         }
@@ -554,9 +566,9 @@ public class NewIntake extends SubSystem {
             //Slides set to max power
             p = Math.signum(error);
         } else {//if (error<4 but error>.1)
-            p = error*.3;//.35;
-            d = ((prevSlideError-error) / elapsedTime) * .016;//.03;//.007
-            f=Math.signum(error)*0.12;//.15;
+            p = error*.28;//.35;
+            d = ((prevSlideError-error) / elapsedTime) * .011;//.03;//.007
+            f=Math.signum(error)*0.07;//.15;
         }
 
 //        p = 0;

@@ -135,30 +135,30 @@ public class MasterThread {
 
 
         for (SubSystem subSystem: subSystems) {
-            if (subSystem.getClass() == NewDrivetrain.class) {
-                try {
-                    Thread thread = new Thread( () -> {
-                        try {
-                            Thread.sleep(1000);
-
-                            throw new RuntimeException("Subsystem loop got stuck " + subSystem);
-                        } catch (InterruptedException e) {
-                        }
-                    });
-                    thread.start();
-
-                    subSystem.loop();
-
-                    thread.interrupt();
-                    thread.join(1000);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    throw new RuntimeException("Subsystem loop got stuck at line " + ((NewDrivetrain) subSystem).lineNumber.get() + " pinpoint" + ((NewDrivetrain) subSystem).drive.pinpoint.isPinpointCooked() + " " + subSystem);
-                }
-            } else {
-                subSystem.loop();
-            }
-//            subSystem.loop();
+//            if (subSystem.getClass() == NewDrivetrain.class) {
+//                try {
+//                    Thread thread = new Thread( () -> {
+//                        try {
+//                            Thread.sleep(1000);
+//
+//                            throw new RuntimeException("Subsystem loop got stuck " + subSystem);
+//                        } catch (InterruptedException e) {
+//                        }
+//                    });
+//                    thread.start();
+//
+//                    subSystem.loop();
+//
+//                    thread.interrupt();
+//                    thread.join(1000);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                    throw new RuntimeException("Subsystem loop got stuck at line " + ((NewDrivetrain) subSystem).lineNumber.get() + " pinpoint" + ((NewDrivetrain) subSystem).drive.pinpoint.isPinpointCooked() + " " + subSystem);
+//                }
+//            } else {
+//                subSystem.loop();
+//            }
+            subSystem.loop();
 
 
         }
