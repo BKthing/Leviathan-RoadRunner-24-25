@@ -52,15 +52,14 @@ public class RRRight5plus0Auto extends LinearOpMode {
 
         intake = new NewIntake(masterThread.getData(), horizontalSlideEncoder, breakBeam, blueAlliance, false, true, () -> drivetrain.getVoltage());
 
-
-        drivetrain = new NewDrivetrain(masterThread.getData(), intake);
-        drivetrain.setDriveState(NewDrivetrain.DriveState.FOLLOW_PATH);
-
-
-
         verticalSlideEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, "verticalLeft"));
 
         outtake = new NewOuttake(masterThread.getData(), intake, verticalSlideEncoder, blueAlliance, false, true, true, true, () -> drivetrain.getVoltage());
+
+
+        drivetrain = new NewDrivetrain(masterThread.getData(), outtake, intake);
+        drivetrain.setDriveState(NewDrivetrain.DriveState.FOLLOW_PATH);
+
 
         //its important that outtake is added after intake for update order purposes
         masterThread.addSubSystems(

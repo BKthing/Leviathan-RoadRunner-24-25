@@ -87,17 +87,21 @@ public class VisionSubsystem extends SubSystem {
             pipeline.reCenter.set(true);
         }
 
-        Vector2d relCords = hasSampleVal ? pixelToRelFieldCords(pipeline.getTargetBlockPixels()) : new Vector2d(0, 0);
+        if (hasSampleVal) {
+            Vector2d relCords = pixelToRelFieldCords(pipeline.getTargetBlockPixels());
+            targetSamplePose = intakePose.getVector2d().plus(relCords.rotate(intakePose.getHeading()));
 
-        targetSamplePose = intakePose.getVector2d().plus(relCords.rotate(intakePose.getHeading()));
+            visionsTelem.setValue(relCords.getX() + " angle: " + relCords.getY());
 
-        visionsTelem.setValue(relCords.getX() + " angle: " + relCords.getY());
+            Pose2d driveTrainPoseEstimate = drivetrain.getPoseEstimate();
 
-        Pose2d driveTrainPoseEstimate = drivetrain.getPoseEstimate();
+            sampleRobotDiff = targetSamplePose.minus(driveTrainPoseEstimate.getVector2d());
 
-        sampleRobotDiff = targetSamplePose.minus(driveTrainPoseEstimate.getVector2d());
+            targetRobotPose = driveTrainPoseEstimate.getVector2d().toPose(targetSamplePose.minus(drivetrain.getPoseEstimate().getVector2d()).getDirection());
 
-        targetRobotPose = driveTrainPoseEstimate.getVector2d().toPose(targetSamplePose.minus(drivetrain.getPoseEstimate().getVector2d()).getDirection());
+        }
+
+
 
     }
 

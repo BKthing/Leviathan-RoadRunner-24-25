@@ -50,8 +50,8 @@ public class CameraPickupTest extends LinearOpMode {
 
     private Telemetry.Item targetAngle;
 
-    private double maxGrabAngle = Math.toRadians(-193);
-    private double minGrabAngle = Math.toRadians(-167);
+    private double maxGrabAngle = Math.toRadians(193);
+    private double minGrabAngle = Math.toRadians(167);
 
     private double extensionDistance = 0;
 
@@ -83,12 +83,13 @@ public class CameraPickupTest extends LinearOpMode {
 
         intake = new NewIntake(masterThread.getData(), horizontalSlideEncoder, breakBeam, blueAlliance, true, false, () -> drivetrain.getVoltage());
 
-        drivetrain = new NewDrivetrain(masterThread.getData(), intake);
-        drivetrain.setDriveState(NewDrivetrain.DriveState.FOLLOW_PATH);
-
         verticalSlideEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, "verticalLeft"));
 
         outtake = new NewOuttake(masterThread.getData(), intake, verticalSlideEncoder, blueAlliance, true, true, true, false, () -> drivetrain.getVoltage());
+
+        drivetrain = new NewDrivetrain(masterThread.getData(), outtake, intake);
+        drivetrain.setDriveState(NewDrivetrain.DriveState.FOLLOW_PATH);
+
 
         vision = new VisionSubsystem(drivetrain, masterThread.getData(), blueAlliance);
 
@@ -169,7 +170,7 @@ public class CameraPickupTest extends LinearOpMode {
             switch (grabFromSubmersibleState) {
                 case SEARCHING:
                     if (vision.hasSample()) {
-                        targetHeading = MathUtil.clip(Rotation.inRange(prevHeading+Rotation.inRange((vision.getTargetRobotPose().getHeading()-prevHeading), Math.PI, -Math.PI)*.3, 2*Math.PI, 0), minGrabAngle, maxGrabAngle);
+                        targetHeading = MathUtil.clip(Rotation.inRange(prevHeading+Rotation.inRange((vision.getTargetRobotPose().getHeading()-prevHeading), Math.PI, -Math.PI)*.3, 2*Math.PI, 0), maxGrabAngle, minGrabAngle);
 
                         drivetrain.holdPoint(holdPoint.toPose(targetHeading));
 
@@ -184,7 +185,7 @@ public class CameraPickupTest extends LinearOpMode {
                                     .build();
                             searching = true;
                         }
-                            searching = searchTurn.run(telemetryPacket);
+                        searching = searchTurn.run(telemetryPacket);
                     }
                     break;
                 case APPROACHING_HEADING:

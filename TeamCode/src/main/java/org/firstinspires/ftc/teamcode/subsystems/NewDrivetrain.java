@@ -5,9 +5,14 @@ import static org.firstinspires.ftc.teamcode.util.MathUtil.robotToIntakePos;
 import com.acmerobotics.dashboard.canvas.Canvas;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.InstantAction;
+import com.acmerobotics.roadrunner.MinVelConstraint;
+import com.acmerobotics.roadrunner.ProfileAccelConstraint;
+import com.acmerobotics.roadrunner.SequentialAction;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.reefsharklibrary.data.MotorPowers;
 import com.reefsharklibrary.data.Pose2d;
@@ -23,6 +28,7 @@ import org.firstinspires.ftc.teamcode.util.DashboardUtil;
 import org.firstinspires.ftc.teamcode.util.RobotConstants;
 import org.firstinspires.ftc.teamcode.util.threading.SubSystemData;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -42,7 +48,14 @@ public class NewDrivetrain extends SubSystem {
 
     private boolean followPath = false;
 
-//    private FtcDashboard dashboard;
+    MinVelConstraint moveToScoreVelConstraint;
+    ProfileAccelConstraint moveToScoreAccelConstraint;
+
+    MinVelConstraint firstMoveToGrabVelConstraint;
+    ProfileAccelConstraint firstMoveToGrabAccelConstraint;
+
+    MinVelConstraint moveToGrabVelConstraint;
+    ProfileAccelConstraint moveToGrabAccelConstraint;
 
     private final DcMotorEx frontLeft, frontRight, backLeft, backRight;
 
@@ -89,6 +102,8 @@ public class NewDrivetrain extends SubSystem {
 
     private final Telemetry.Item pinPointCookedTelem;
 
+    private final NewOuttake outtake;
+
     private final NewIntake intake;
     private final Telemetry.Item driveTrainLoopTime;
 
@@ -119,15 +134,19 @@ public class NewDrivetrain extends SubSystem {
 
     public AtomicInteger lineNumber = new AtomicInteger();
 
-    public NewDrivetrain(SubSystemData data, NewIntake intake) {
-        this(data, DriveState.FOLLOW_PATH, intake);
+    private final Gamepad oldGamePad1 = new Gamepad();
+
+
+    public NewDrivetrain(SubSystemData data, NewOuttake outtake, NewIntake intake) {
+        this(data, DriveState.FOLLOW_PATH, outtake, intake);
     }
 
-    public NewDrivetrain(SubSystemData data, DriveState driveState, NewIntake intake) {
+    public NewDrivetrain(SubSystemData data, DriveState driveState, NewOuttake outtake, NewIntake intake) {
         super(data);
 
         this.driveState = driveState;
 
+        this.outtake = outtake;
         this.intake = intake;
 
 
@@ -151,6 +170,16 @@ public class NewDrivetrain extends SubSystem {
         drivetrainMotors = Arrays.asList(frontLeft, backLeft, backRight, frontRight);
 
         this.drive = new PinpointDrive(hardwareMap, new com.acmerobotics.roadrunner.Pose2d(0, 0, 0));
+
+
+        moveToScoreVelConstraint = new MinVelConstraint(Arrays.asList(drive.kinematics.new WheelVelConstraint(80)));
+        moveToScoreAccelConstraint = new ProfileAccelConstraint(-55, 70);
+
+        firstMoveToGrabVelConstraint = new MinVelConstraint(Arrays.asList(drive.kinematics.new WheelVelConstraint(70)));
+        firstMoveToGrabAccelConstraint = new ProfileAccelConstraint(-28, 60);
+
+        moveToGrabVelConstraint = new MinVelConstraint(Arrays.asList(drive.kinematics.new WheelVelConstraint(70)));
+        moveToGrabAccelConstraint = new ProfileAccelConstraint(-35, 60);
 
         pidPointController = new PIDPointController(RobotConstants.pointPID, RobotConstants.headingPID, RobotConstants.trackWidth, RobotConstants.lateralF, RobotConstants.headingF);
 
@@ -297,7 +326,7 @@ public class NewDrivetrain extends SubSystem {
 
                 double turn;
                 if (Math.abs(gamepad1.right_stick_x)>.02) {
-                    turn = -gamepad1.right_stick_x*gamepad1.right_stick_x*gamepad1.right_stick_x*.4*speedMultiplier; //(gamepad1.right_stick_x*Math.abs(gamepad1.right_stick_x))*.7;
+                    turn = -gamepad1.right_stick_x*gamepad1.right_stick_x*gamepad1.right_stick_x*.4*speedMultiplier*(1+1.2*gamepad1.left_trigger); //(gamepad1.right_stick_x*Math.abs(gamepad1.right_stick_x))*.7;
                 } else {
                     turn = 0;
                 }
@@ -325,11 +354,58 @@ public class NewDrivetrain extends SubSystem {
                     fieldCentric = true;
                 }
 
-                lineNumber.set(306);
-                setDrivePower(powers); lineNumber.set(307);
+                if (gamepad1.x && !oldGamePad1.x) {
+                    drive.setPoseEstimate(new com.acmerobotics.roadrunner.Pose2d(-37, 60.7, Math.toRadians(270)));
+                }
+
+                if (gamepad1.b) {
+                    if (!followPath) {
+                        followPath(new SequentialAction(
+                                //move to score
+                                drive.actionBuilder(new com.acmerobotics.roadrunner.Pose2d(-37, 60.7, Math.toRadians(270)))
+                                        .setTangent(new com.reefsharklibrary.data.Vector2d(-4, 29.5).minus(new com.reefsharklibrary.data.Vector2d(-37, 60.7)).getDirection())
+                                        .lineToY(29.5, moveToScoreVelConstraint, moveToScoreAccelConstraint)
+                                        .build(),
+                                new InstantAction(() -> outtake.toClawPosition(NewOuttake.ClawPosition.OPEN)),
+                                //move to grab
+                                drive.actionBuilder(new com.acmerobotics.roadrunner.Pose2d(-4, 29.5, Math.toRadians(270)))
+                                        .setTangent(Math.toRadians(115))
+                                        .afterTime(.75, () -> {
+                                            outtake.toOuttakeState(NewOuttake.ToOuttakeState.WAIT_DROP_BEHIND);
+                                        })
+                                        .splineToConstantHeading(new com.acmerobotics.roadrunner.Vector2d(-37, 59), Math.toRadians(90), firstMoveToGrabVelConstraint, firstMoveToGrabAccelConstraint)
+                                        .afterTime(.1, () -> {
+                                            outtake.toClawPosition(NewOuttake.ClawPosition.CLOSED);
+                                        })
+                                        .lineToY(60.6, moveToGrabVelConstraint, moveToGrabAccelConstraint)
+                                        .waitSeconds(.2)
+                                        .build()
+                        ));
+                    }
+
+                    packet = new TelemetryPacket();
+                    packet.fieldOverlay().getOperations().addAll(canvas.getOperations());
+
+                    followPath = path.run(packet);
+
+                    setDrivePower(drive.getDrivePowers());
+
+
+                } else if (oldGamePad1.b) {
+                    followPath = false;
+                    setDrivePower(Arrays.asList(0.0, 0.0, 0.0, 0.0));
+                } else {
+                    lineNumber.set(306);
+                    setDrivePower(powers); lineNumber.set(307);
+                }
+
+
 
                 break;
         }
+
+        oldGamePad1.copy(gamepad1);
+
 
         roadRunnerPos.setValue(roadRunnerPoseEstimate); lineNumber.set(312);
         roadRunnerVel.setValue(roadRunnerPoseVelocity); lineNumber.set(313);

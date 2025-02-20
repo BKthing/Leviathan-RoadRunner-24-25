@@ -84,11 +84,12 @@ public class RRTest extends LinearOpMode {
 
         intake = new NewIntake(masterThread.getData(), horizontalSlideEncoder, breakBeam, blueAlliance, false, true, () -> drivetrain.getVoltage());
 
-        drivetrain = new NewDrivetrain(masterThread.getData(), intake);
+        outtake = new NewOuttake(masterThread.getData(), intake, verticalSlideEncoder, blueAlliance, false, true, true, true, () -> drivetrain.getVoltage());
+
+        drivetrain = new NewDrivetrain(masterThread.getData(), outtake, intake);
         drivetrain.setDriveState(NewDrivetrain.DriveState.FOLLOW_PATH);
 
 
-        outtake = new NewOuttake(masterThread.getData(), intake, verticalSlideEncoder, blueAlliance, false, true, true, true, () -> drivetrain.getVoltage());
 
         vision = new VisionSubsystem(drivetrain, masterThread.getData(), blueAlliance);
 

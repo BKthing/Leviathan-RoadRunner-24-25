@@ -45,8 +45,8 @@ public class RRLeft0plus7Auto extends LinearOpMode {
     private double targetHeading = Math.toRadians(180);
     private double prevHeading = Math.toRadians(180);
 
-    private final double maxGrabAngle = Math.toRadians(-193);
-    private final double minGrabAngle = Math.toRadians(-167);
+    private final double maxGrabAngle = Math.toRadians(193);
+    private final double minGrabAngle = Math.toRadians(167);
 
     NewDrivetrain drivetrain;
     NewIntake intake;
@@ -89,11 +89,11 @@ public class RRLeft0plus7Auto extends LinearOpMode {
 
         intake = new NewIntake(masterThread.getData(), horizontalSlideEncoder, breakBeam, blueAlliance, false, true, () -> drivetrain.getVoltage());
 
-        drivetrain = new NewDrivetrain(masterThread.getData(), intake);
+        outtake = new NewOuttake(masterThread.getData(), intake, verticalSlideEncoder, blueAlliance, false, true, true, true, () -> drivetrain.getVoltage());
+
+        drivetrain = new NewDrivetrain(masterThread.getData(), outtake, intake);
         drivetrain.setDriveState(NewDrivetrain.DriveState.FOLLOW_PATH);
 
-
-        outtake = new NewOuttake(masterThread.getData(), intake, verticalSlideEncoder, blueAlliance, false, true, true, true, () -> drivetrain.getVoltage());
 
         vision = new VisionSubsystem(drivetrain, masterThread.getData(), blueAlliance);
 
@@ -129,11 +129,11 @@ public class RRLeft0plus7Auto extends LinearOpMode {
                     intake.setIntakingState(NewIntake.IntakingState.START_INTAKING);
                     autoTimer.reset();
                 })
-                .splineToConstantHeading(new Vector2d(56, 51), Math.toRadians(250))
+                .splineToConstantHeading(new Vector2d(57, 51), Math.toRadians(253))
 //                .splineToLinearHeading(new Pose2d(50.5, 50, Math.toRadians(270)), Math.toRadians(270))
                 .build();
 
-        Action moveToScoreBlock1 = drivetrain.drive.actionBuilder(new Pose2d(56, 51, Math.toRadians(270)))
+        Action moveToScoreBlock1 = drivetrain.drive.actionBuilder(new Pose2d(57, 51, Math.toRadians(253)))
                 .setTangent(Math.toRadians(84))
                 .splineToLinearHeading(new Pose2d(62, 53.5, Math.toRadians(265)), Math.toRadians(85))
                 .build();
@@ -153,23 +153,25 @@ public class RRLeft0plus7Auto extends LinearOpMode {
 
         Action moveToScoreBlock2 = drivetrain.drive.actionBuilder(new Pose2d(61, 51, Math.toRadians(265)))
                 .setTangent(Math.toRadians(90))
-                .splineToLinearHeading(new Pose2d(62.5, 54, Math.toRadians(270)), Math.toRadians(90))
+                .splineToLinearHeading(new Pose2d(63, 54.5, Math.toRadians(270)), Math.toRadians(90))
                 .build();
 
-        Action moveToGrabBlock3 = drivetrain.drive.actionBuilder(new Pose2d(62.5, 54, Math.toRadians(270)))
+        Action moveToGrabBlock3 = drivetrain.drive.actionBuilder(new Pose2d(63, 54.5, Math.toRadians(270)))
                 .afterTime(0, () -> {
-                    intake.setTargetSlidePos(12.5);
-                    extensionDistance = 12.5;
                     intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
+                })
+                .afterTime(.3, () -> {
+                    intake.setTargetSlidePos(11.5);
+                    extensionDistance = 11.5;
                     intake.setIntakingState(NewIntake.IntakingState.START_INTAKING);
                     autoTimer.reset();
                 })
                 .waitSeconds(.1)
                 .setTangent(270)
-                .splineToLinearHeading(new Pose2d(62.5, 51.5, Math.toRadians(278)), Math.toRadians(270))
+                .splineToLinearHeading(new Pose2d(62.5, 51.5, Math.toRadians(281)), Math.toRadians(270))
                 .build();
 
-        Action moveToScoreBlock3 = drivetrain.drive.actionBuilder(new Pose2d(62.5, 51.5, Math.toRadians(278)))
+        Action moveToScoreBlock3 = drivetrain.drive.actionBuilder(new Pose2d(62.5, 51.5, Math.toRadians(281)))
                 .setTangent(Math.toRadians(90))
                 .splineToLinearHeading(new Pose2d(62.5, 55, Math.toRadians(270)), Math.toRadians(90))
                 .build();
@@ -255,7 +257,7 @@ public class RRLeft0plus7Auto extends LinearOpMode {
                 .afterTime(0, () -> {
                     drivetrain.cancelHoldPoint();
                 })
-                .splineTo(new Vector2d(58, 56), Math.toRadians(60), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-40, PARAMS.maxProfileAccel))
+                .splineTo(new Vector2d(58, 56), Math.toRadians(60), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-35, PARAMS.maxProfileAccel))
                 .build();
 
         Action moveToScoreFromSubmersible2 = drivetrain.drive.actionBuilder(new Pose2d(holdPoint.getX(), holdPoint.getY(), Math.toRadians(180)))
@@ -263,7 +265,7 @@ public class RRLeft0plus7Auto extends LinearOpMode {
                 .afterTime(0, () -> {
                     drivetrain.cancelHoldPoint();
                 })
-                .splineTo(new Vector2d(58, 56), Math.toRadians(60), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-40, PARAMS.maxProfileAccel))
+                .splineTo(new Vector2d(58, 56), Math.toRadians(60), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-35, PARAMS.maxProfileAccel))
                 .build();
 
         Action moveToScoreFromSubmersible3 = drivetrain.drive.actionBuilder(new Pose2d(holdPoint.getX(), holdPoint.getY(), Math.toRadians(180)))
@@ -271,7 +273,7 @@ public class RRLeft0plus7Auto extends LinearOpMode {
                 .afterTime(0, () -> {
                     drivetrain.cancelHoldPoint();
                 })
-                .splineTo(new Vector2d(58, 56), Math.toRadians(60), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-40, PARAMS.maxProfileAccel))
+                .splineTo(new Vector2d(58, 56), Math.toRadians(60), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-35, PARAMS.maxProfileAccel))
                 .build();
 
 
@@ -286,10 +288,12 @@ public class RRLeft0plus7Auto extends LinearOpMode {
                     if (drivetrain.getPoseEstimate().getX()>29) {
                         //park from bucket
 
-                        outtake.toOuttakeState(NewOuttake.ToOuttakeState.TOUCH_BAR);
                         intake.toIntakeState(NewIntake.ToIntakeState.RETRACT_AND_STOP_INTAKING);
 
                         path = drivetrain.drive.actionBuilder(MathUtil.toRoadRunnerPose(drivetrain.getPoseEstimate()))
+                                .afterTime(.4, () -> {
+                                    outtake.toOuttakeState(NewOuttake.ToOuttakeState.TOUCH_BAR);
+                                })
                                 .splineToLinearHeading(new Pose2d(22, 8, Math.toRadians(180)), Math.toRadians(180))
                                 .build();
                     } else {
@@ -484,7 +488,7 @@ public class RRLeft0plus7Auto extends LinearOpMode {
 
                         autoTimer.reset();
                         grabFromSubmersibleState = RRLeft0plus7Auto.GrabFromSubmersibleState.APPROACHING_HEADING;
-                    } else if (autoTimer.seconds()>1) {
+                    } else if (autoTimer.seconds()>.5) {
                         if (!searching) {
                             drivetrain.cancelHoldPoint();
                             searchTurn = drivetrain.drive.actionBuilder(MathUtil.toRoadRunnerPose(holdPoint.toPose(Math.toRadians(180))))
@@ -560,7 +564,7 @@ public class RRLeft0plus7Auto extends LinearOpMode {
                     if (intake.getPrevIntakingState() == NewIntake.IntakingState.IDLE) {
 
                         intake.toIntakeState(NewIntake.ToIntakeState.SEARCH_POSITION);
-                        extensionDistance = 3;
+                        extensionDistance = 1;
                         drivetrain.holdPoint(holdPoint.toPose(Math.toRadians(180)));
 
                         grabFromSubmersibleState = RRLeft0plus7Auto.GrabFromSubmersibleState.RESETTING;
@@ -569,7 +573,7 @@ public class RRLeft0plus7Auto extends LinearOpMode {
                 case RESETTING:
                     if (drivetrain.getHoldPointError().minimizeHeading(Math.PI, -Math.PI).inRange(new com.reefsharklibrary.data.Pose2d(1, 1, Math.toRadians(3.5)))) {
                         grabFromSubmersibleState = RRLeft0plus7Auto.GrabFromSubmersibleState.SEARCHING;
-                        extensionDistance = 3;
+                        extensionDistance = 1;
                         autoTimer.reset();
                     }
                     break;

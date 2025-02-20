@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
 import android.annotation.SuppressLint;
+import android.graphics.Color;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.hardware.lynx.LynxModule;
@@ -63,6 +64,7 @@ public class NewIntake extends SubSystem {
         INTAKING,
         INTAKING_A_LITTLE_MORE,
         INTAKING_SPIN_OUT,
+        INTAKING_IN_AGAIN,
         FINISH_INTAKING,
         HOLDING_SAMPLE,
         MANUAL_EJECTING,
@@ -216,6 +218,8 @@ public class NewIntake extends SubSystem {
     private boolean nextCheckColor = false;
     private boolean checkColor = false;
 
+    float hsvValues[]  = {0F, 0F, 0F};
+
     Gamepad oldGamePad2 = new Gamepad();
 
     private final Telemetry.Item intakeTelem;
@@ -299,6 +303,8 @@ public class NewIntake extends SubSystem {
         leftSpinnerServo.setDirection(DcMotorSimple.Direction.REVERSE);
 
         colorSensor = hardwareMap.get(NormalizedColorSensor.class, "colorSensor");
+
+        colorSensor.setGain(30);
 
 
         intakeTelem = telemetry.addData("Intake state", intakeState.name());
@@ -460,6 +466,9 @@ public class NewIntake extends SubSystem {
                 intakingState = IntakingState.INTAKING;
                 targetIntakeSpeed = 1;
             } else if (gamepad2.left_trigger>.2 && oldGamePad2.left_trigger<=.2) {
+                if (targetIntakePos == IntakePos.UP.pos) {
+                    targetIntakePos = IntakePos.AUTO_HEIGHT.pos;
+                }
                 targetIntakeSpeed = -1;
                 intakingState = IntakingState.MANUAL_EJECTING;
             } else if ((!gamepad2.left_bumper && oldGamePad2.left_bumper) || (oldGamePad2.left_trigger>.2 && gamepad2.left_trigger<=.2)) {
@@ -467,8 +476,12 @@ public class NewIntake extends SubSystem {
                     targetIntakeSpeed = 0;
                     intakingState = IntakingState.IDLE;
                     checkColor = false;
+                    if (targetIntakePos == IntakePos.AUTO_HEIGHT.pos) {
+                        toIntakeState(ToIntakeState.RETRACT_AND_STOP_INTAKING);
+                    }
                 }
             }
+
         }
 
         switch (toIntakeState) {
@@ -619,8 +632,8 @@ public class NewIntake extends SubSystem {
 
                     sampleColor = findSampleColor();
 
-                    if (blueAlliance == null || (sampleColor == SampleColor.NONE && colorReads > 4)) {
-//                        throw new RuntimeException("Not nothing " + colors.red + " " + colors.green + " " + colors.blue);
+                    if (blueAlliance == null || (sampleColor == SampleColor.NONE && colorReads > 10)) {
+//                        throw new RuntimeException(String.format("Not nothing RGB: %.4f, %.4f, %.4f, HSV: %.4f, %.4f, %.4f", colors.red, colors.green, colors.blue, hsvValues[0], hsvValues[1], hsvValues[2]));
 
                         targetIntakePos = IntakePos.UP.pos;
 
@@ -644,10 +657,10 @@ public class NewIntake extends SubSystem {
                         break;
                     }
 
-//                    if (sampleColor == SampleColor.RED) {
-//                        throw new RuntimeException("Not red " + colors.red + " " + colors.green + " " + colors.blue);
-//                    } else if (sampleColor == SampleColor.YELLOW) {
-//                        throw new RuntimeException("Not yellow " + colors.red + " " + colors.green + " " + colors.blue);
+//                    if (sampleColor == SampleColor.YELLOW) {
+//                        throw new RuntimeException(String.format("Not yellow RGB: %.4f, %.4f, %.4f, HSV: %.4f, %.4f, %.4f", colors.red, colors.green, colors.blue, hsvValues[0], hsvValues[1], hsvValues[2]));
+//                    } else if (sampleColor == SampleColor.RED) {
+//                        throw new RuntimeException(String.format("Not red RGB: %.4f, %.4f, %.4f, HSV: %.4f, %.4f, %.4f", colors.red, colors.green, colors.blue, hsvValues[0], hsvValues[1], hsvValues[2]));
 //                    }
 
                     checkColor = false;
@@ -671,15 +684,25 @@ public class NewIntake extends SubSystem {
                 }
                 break;
             case INTAKING_A_LITTLE_MORE:
-                if (intakingTimer.seconds()>.3) {
-                    targetIntakeSpeed = -1;
+                if (intakingTimer.seconds()>.1) {
+                    leftSpinnerServoHardwareAction.setAndQueueAction(() -> {
+                        leftSpinnerServo.setPower(-1);
+                    });
                     intakingTimer.reset();
                     intakingState = IntakingState.INTAKING_SPIN_OUT;
                 }
                 break;
             case INTAKING_SPIN_OUT:
-                if (intakingTimer.seconds()>.1) {
-                    targetIntakeSpeed = 1;
+                if (intakingTimer.seconds()>.3) {
+                    leftSpinnerServoHardwareAction.setAndQueueAction(() -> {
+                        leftSpinnerServo.setPower(1);
+                    });
+                    intakingTimer.reset();
+                    intakingState = IntakingState.INTAKING_IN_AGAIN;
+                }
+                break;
+            case INTAKING_IN_AGAIN:
+                if (intakingTimer.seconds()>.2) {
                     intakingTimer.reset();
                     intakingState = IntakingState.FINISH_INTAKING;
                 }
@@ -884,7 +907,7 @@ public class NewIntake extends SubSystem {
                 }
                 break;
             case WAITING_FOR_TRANSFER:
-                if (intakingState == IntakingState.HOLDING_SAMPLE) {
+                if (intakingState == IntakingState.HOLDING_SAMPLE || intakingState == IntakingState.FINISH_INTAKING) {
                     if (isBreakBeam) {
                         transfer = true;
                         intakeState = IntakeState.WAITING_FOR_TRANSFERRING;
@@ -941,18 +964,20 @@ public class NewIntake extends SubSystem {
     }
 
     private SampleColor findSampleColor() {
-        if ( colors.red < .03 && colors.green > .008 && colors.blue < .015) {//green .006 blue .015 red .04
+                Color.colorToHSV(colors.toColor(), hsvValues);
+
+//                return SampleColor.BLUE;
+        if (hsvValues[2] < .13) {
+            return SampleColor.NONE;
+        } else if ((hsvValues[0] > 40 && hsvValues[0] < 80)) {
 //            throw new RuntimeException("Not yellow");
             return SampleColor.YELLOW;
-        } else if (colors.red > .007 && colors.blue < .01) { //&& colors.green < .012) {
+        } else if ((hsvValues[0] < 30)) {
 //            throw new RuntimeException("Not red");
             return SampleColor.RED;
-        } else if (colors.blue > .0055 && colors.red < .02) {
-//            throw new RuntimeException("Not blue");
+        } else if ((hsvValues[0] > 200 && hsvValues[0] < 240)) {
             return SampleColor.BLUE;
-        }
-        else {
-//            throw new RuntimeException("Not nothing");
+        } else {
             return SampleColor.NONE;
         }
     }

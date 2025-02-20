@@ -223,7 +223,7 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
 
                 setTargetBlockPixels(intakePoint);
 
-                boolean newHasSample = safeGetMat(blockPullVectorField, intakePoint.getX(), intakePoint.getY())>150;
+                boolean newHasSample = safeGetMat(blockPullVectorField, intakePoint.getX(), intakePoint.getY())>175;
 
                 if (newHasSample != hasSampleValue) {
                     hasSampleValue = newHasSample;

@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.teleops;
 
+import android.graphics.Color;
+
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.lynx.LynxNackException;
 import com.qualcomm.hardware.lynx.commands.core.LynxGetADCCommand;
@@ -30,6 +32,8 @@ public class AxonTest extends LinearOpMode {
     private double LcurPos, RcurPos;
     private NormalizedColorSensor colorSensor;
 
+    private float[] hsvValues = {0F, 0F, 0F};
+
     private TouchSensor breakBeam;
     Telemetry.Item colorTelem;
     Telemetry.Item sampleColorTelem;
@@ -58,7 +62,10 @@ public class AxonTest extends LinearOpMode {
         servoCommand = new LynxGetADCCommand(myRevHub, servoChannel, LynxGetADCCommand.Mode.ENGINEERING);
         myRevHub = hardwareMap.get(LynxModule.class, "Expansion Hub 3");
         servoBusCurrent = getServoBusCurrent();
+
         colorSensor = hardwareMap.get(NormalizedColorSensor.class, "colorSensor");
+        colorSensor.setGain(30);
+
         servoBusCurrentTelem = telemetry.addData("Servo Bus Current", "");
         colorTelem = telemetry.addData("Color RGB", "");
         sampleColorTelem = telemetry.addData("Sample Color", "");
@@ -98,13 +105,7 @@ public class AxonTest extends LinearOpMode {
 
         posTelem = telemetry.addData("Pos", "");
         pitchPosTelem = telemetry.addData("Pitch Pos", "");
-//        leftOuttake.scaleRange(.34, .965);
-//        rightOuttake.scaleRange(1-.965, 1-.34);
-//
-//        rightIntakeServo.setDirection(Servo.Direction.REVERSE);
 
-//
-//        clawWristRoll.scaleRange(.34, .965);
 //        clawWristPitch.scaleRange(.34, .965);
 
 
@@ -139,19 +140,19 @@ public class AxonTest extends LinearOpMode {
 //                rightIntake.setPower(0);
 //            }
 
-            colorTelem.setValue(colors.red + " " + colors.green + " " + colors.blue);
+            Color.colorToHSV(colors.toColor(), hsvValues);
 
-            if (colors.green > .013) {
+            colorTelem.setValue(String.format("RGB: %.4f, %.4f, %.4f, HSV: %.4f, %.4f, %.4f", colors.red, colors.green, colors.blue, hsvValues[0], hsvValues[1], hsvValues[2]));
+
+            if ((hsvValues[0] > 23 && hsvValues[0] < 50)) {
 //            throw new RuntimeException("Not yellow");
                 sampleColorTelem.setValue("yellow");
-            } else if (colors.red > .004) { //&& colors.green < .012) {
+            } else if ((hsvValues[0] < 20 || hsvValues[0] > 230)) {
 //            throw new RuntimeException("Not red");
                 sampleColorTelem.setValue("red");
-            } else if (colors.blue > .0055) {
+            } else if ((hsvValues[0] > 150 && hsvValues[0] < 180)) {
                 sampleColorTelem.setValue("blue");
-            }
-
-            else {
+            } else {
                 sampleColorTelem.setValue("no sample");
             }
 
@@ -175,6 +176,9 @@ public class AxonTest extends LinearOpMode {
             }  else if(gamepad2.y) {
                 leftSpinnerServo.setPower(-1);
                 rightSpinnerServo.setPower(-1);
+            } else if(gamepad2.x) {
+                leftSpinnerServo.setPower(-1);
+                rightSpinnerServo.setPower(1);
             } else {
                 leftSpinnerServo.setPower(0);
                 rightSpinnerServo.setPower(0);
