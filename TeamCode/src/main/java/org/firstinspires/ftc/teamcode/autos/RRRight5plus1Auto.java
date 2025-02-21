@@ -95,32 +95,32 @@ public class RRRight5plus1Auto extends LinearOpMode {
                 .setTangent(Math.toRadians(90))
                 .afterDisp(20, () -> {
                     intake.setTargetSlidePos(18.5);
-                    intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
+                    intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE_AUTO_SHOVE_HEIGHT);
                 })
                 .splineToConstantHeading(new Vector2d(-10, 37), Math.toRadians(180))
                 .splineToSplineHeading(new Pose2d(-25.5, 40.5, Math.toRadians(235)), Math.toRadians(180))
-                .turn(Math.toRadians(-75), new TurnConstraints(5 *Math.PI, -2 *Math.PI, 4 *Math.PI))
+                .turn(Math.toRadians(-75), new TurnConstraints(4 *Math.PI, -2 *Math.PI, 3 *Math.PI))
                 .afterTime(.1, () -> {
                     intake.toIntakeState(NewIntake.ToIntakeState.RAISE_INTAKE);
                     intake.setTargetSlidePos(18.5);
                 })
 
-                .setTangent(new com.reefsharklibrary.data.Vector2d(-36.5, 43.5).minus(new com.reefsharklibrary.data.Vector2d(-25.5, 40.5)).getDirection())
-                .lineToXSplineHeading(-36.5, Math.toRadians(231))
+                .setTangent(new com.reefsharklibrary.data.Vector2d(-35, 41).minus(new com.reefsharklibrary.data.Vector2d(-25.5, 40.5)).getDirection())
+                .lineToXSplineHeading(-35, Math.toRadians(228))
                 .build();
 
-        Action moveToPlaceBlock2 = drivetrain.drive.actionBuilder(new Pose2d(-36.5, 43.5, Math.toRadians(231)))
+        Action moveToPlaceBlock2 = drivetrain.drive.actionBuilder(new Pose2d(-35, 41, Math.toRadians(231)))
                 .afterTime(0, () -> {
                     intake.setTargetSlidePos(18.5);
                 })
                 .waitSeconds(.3)
-                .turn(Math.toRadians(-68), new TurnConstraints(5 *Math.PI, -2 *Math.PI, 4 *Math.PI))
+                .turn(Math.toRadians(-71), new TurnConstraints(4 *Math.PI, -2 *Math.PI, 3 *Math.PI))
                 .afterTime(.1, () -> {
                     intake.toIntakeState(NewIntake.ToIntakeState.RETRACT);
                 })
                 .setTangent(Math.toRadians(270))
                 .splineToSplineHeading(new Pose2d(-57.5, 12.5, Math.toRadians(270)), Math.toRadians(180), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-25, PARAMS.maxProfileAccel))
-                .splineToConstantHeading(new Vector2d(-63, 15.5), Math.toRadians(90), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(35))), new ProfileAccelConstraint(-23, PARAMS.maxProfileAccel))
+                .splineToConstantHeading(new Vector2d(-62.5, 15.5), Math.toRadians(90), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(35))), new ProfileAccelConstraint(-23, PARAMS.maxProfileAccel))
                 .lineToYConstantHeading(52, new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-40, PARAMS.maxProfileAccel))
                 .splineToConstantHeading(new Vector2d(-58,61.7), Math.toRadians(80), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-35, PARAMS.maxProfileAccel))
                 .build();
@@ -211,16 +211,16 @@ public class RRRight5plus1Auto extends LinearOpMode {
                     intake.setIntakingState(NewIntake.IntakingState.START_INTAKING);
                     autoTimer.reset();
                 })
-                .splineToLinearHeading(new Pose2d(-10, 56, Math.toRadians(175)), Math.toRadians(90))
+                .splineToLinearHeading(new Pose2d(-11.5, 56.5, Math.toRadians(175)), Math.toRadians(90))
                 .build();
 
-        Action scoreBasket = drivetrain.drive.actionBuilder(new Pose2d(-10, 56, Math.toRadians(180)))
-                .lineToXLinearHeading(56, Math.toRadians(189), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(80))), new ProfileAccelConstraint(-40, 75))
+        Action scoreBasket = drivetrain.drive.actionBuilder(new Pose2d(-11.5, 56, Math.toRadians(180)))
+                .lineToXLinearHeading(55.5, Math.toRadians(193), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(80))), new ProfileAccelConstraint(-35, 65))
                 .build();
 
-        Action moveToPark = drivetrain.drive.actionBuilder(new Pose2d(10, 54.5, Math.toRadians(189)))
+        Action moveToPark = drivetrain.drive.actionBuilder(new Pose2d(-10, 56, Math.toRadians(189)))
                 .setTangent(Math.toRadians(180))
-                .afterTime(.6, () -> {
+                .afterTime(.4, () -> {
                     intake.setTargetSlidePos(18.5);
                     intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
                 })
@@ -243,13 +243,13 @@ public class RRRight5plus1Auto extends LinearOpMode {
         masterThread.clearBulkCache();
 
         intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
-        outtake.toOuttakeState(NewOuttake.ToOuttakeState.PLACE_FRONT);
+        outtake.toOuttakeState(NewOuttake.ToOuttakeState.FIRST_PLACE_FRONT);
 
         drivetrain.followPath(new SequentialAction(
                 preload,
                 new InstantAction(() -> outtake.toClawPosition(NewOuttake.ClawPosition.OPEN)),
                 moveToGrabBlock1,
-                new InstantAction(() -> intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE)),
+                new InstantAction(() -> intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE_AUTO_SHOVE_HEIGHT)),
                 moveToPlaceBlock2,
                 new InstantAction(() -> outtake.toClawPosition(NewOuttake.ClawPosition.CLOSED)),
                 moveToScoreSpecimen2,
@@ -267,13 +267,13 @@ public class RRRight5plus1Auto extends LinearOpMode {
                 moveToScoreSpecimen5,
                 new InstantAction(() -> {
                     outtake.toClawPosition(NewOuttake.ClawPosition.OPEN);
-                    outtake.toOuttakeState(NewOuttake.ToOuttakeState.IDLE);
+//                    outtake.toOuttakeState(NewOuttake.ToOuttakeState.IDLE);
                 }),
                 moveToGrab3,
                 intakeBlock,
                 scoreBasket,
                 new ScoreBlock(),
-                new SleepAction(.1),
+                new SleepAction(.2),
                 moveToPark
                 ));
 
@@ -310,10 +310,11 @@ public class RRRight5plus1Auto extends LinearOpMode {
         @Override
         public boolean run(@NonNull TelemetryPacket telemetryPacket) {
             if (firstLoop) {
-                if (!intake.isBreakBeam() && (intake.getPrevIntakeState() == NewIntake.IntakeState.RETRACTING_INTAKE || intake.getPrevIntakeState() == NewIntake.IntakeState.RETRACTING || intake.getPrevIntakeState() == NewIntake.IntakeState.WAITING_AFTER_RETRACTING || intake.getPrevIntakeState() == NewIntake.IntakeState.WAITING_FOR_TRANSFER)) {
-                    intake.setIntakingState(NewIntake.IntakingState.START_EJECTING_PARTIAL_GRAB);
-                    return false;
-                } else {
+//                if (!intake.isBreakBeam() && (intake.getPrevIntakeState() == NewIntake.IntakeState.RETRACTING_INTAKE || intake.getPrevIntakeState() == NewIntake.IntakeState.RETRACTING || intake.getPrevIntakeState() == NewIntake.IntakeState.WAITING_AFTER_RETRACTING || intake.getPrevIntakeState() == NewIntake.IntakeState.WAITING_FOR_TRANSFER)) {
+//                    intake.setIntakingState(NewIntake.IntakingState.START_EJECTING_PARTIAL_GRAB);
+//                    return false;
+//                } else
+                {
                     firstLoop = false;
                     autoTimer.reset();
                     return true;

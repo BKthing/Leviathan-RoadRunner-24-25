@@ -139,41 +139,51 @@ public class CameraPickupTest extends LinearOpMode {
                     @Override
                     public boolean run(@NonNull TelemetryPacket telemetryPacket) {
                         if (firstLoop) {
-                            if (drivetrain.getPoseEstimate().getX()>29) {
+                            if (drivetrain.getPoseEstimate().getX()>40) {
                                 //park from bucket
 
                                 intake.toIntakeState(NewIntake.ToIntakeState.RETRACT_AND_STOP_INTAKING);
 
                                 path = drivetrain.drive.actionBuilder(MathUtil.toRoadRunnerPose(drivetrain.getPoseEstimate()))
-                                        .afterTime(.4, () -> {
+                                        .afterTime(.2, () -> {
                                             outtake.toOuttakeState(NewOuttake.ToOuttakeState.TOUCH_BAR);
                                         })
-                                        .splineToLinearHeading(new Pose2d(22, 8, Math.toRadians(180)), Math.toRadians(180), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(80))), new ProfileAccelConstraint(-40, 80))
+                                        .splineToLinearHeading(new Pose2d(21.5, 8, Math.toRadians(180)), Math.toRadians(180), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(80))), new ProfileAccelConstraint(-27, 80))
+                                        .afterTime(0, () -> {
+                                            drivetrain.holdPoint(new com.reefsharklibrary.data.Pose2d(21.5, 8, Math.toRadians(180)));
+                                        })
                                         .build();
                             } else {
                                 //park from submersible
 
                                 intake.toIntakeState(NewIntake.ToIntakeState.RETRACT_AND_STOP_INTAKING);
 
-                                if (Math.abs(drivetrain.getPoseEstimate().getX()-28)>1) {
+                                if (drivetrain.getPoseEstimate().getX()<27) {
                                     double tangent = new com.reefsharklibrary.data.Vector2d(28, 8).minus(drivetrain.getPoseEstimate().getVector2d()).getDirection();
 
                                     path = drivetrain.drive.actionBuilder(MathUtil.toRoadRunnerPose(drivetrain.getPoseEstimate()))
                                             .setTangent(tangent)
-                                            .lineToXLinearHeading(28, Math.toRadians(180))
+                                            .lineToXLinearHeading(26.5, Math.toRadians(180), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(80))), new ProfileAccelConstraint(-40, 80))
                                             .afterTime(0, () -> {
                                                 outtake.toOuttakeState(NewOuttake.ToOuttakeState.TOUCH_BAR);
                                             })
-                                            .lineToX(22)
+                                            .setTangent(Math.toRadians(180))
+                                            .lineToX(21.5)
+                                            .afterTime(0, () -> {
+                                                drivetrain.holdPoint(new com.reefsharklibrary.data.Pose2d(21.5, 8, Math.toRadians(180)));
+                                            })
                                             .build();
                                 } else {
                                     outtake.toOuttakeState(NewOuttake.ToOuttakeState.TOUCH_BAR);
 
-                                    double tangent = new com.reefsharklibrary.data.Vector2d(22, 8).minus(drivetrain.getPoseEstimate().getVector2d()).getDirection();
+                                    double tangent = new com.reefsharklibrary.data.Vector2d(21, 8).minus(drivetrain.getPoseEstimate().getVector2d()).getDirection();
 
                                     path = drivetrain.drive.actionBuilder(MathUtil.toRoadRunnerPose(drivetrain.getPoseEstimate()))
                                             .setTangent(tangent)
-                                            .lineToXLinearHeading(28, Math.toRadians(180))
+                                            .lineToXLinearHeading(21.5, Math.toRadians(180))
+                                            .afterTime(0, () -> {
+                                                drivetrain.holdPoint(new com.reefsharklibrary.data.Pose2d(21.5, 8, Math.toRadians(180)));
+                                            })
                                             .build();
                                 }
 

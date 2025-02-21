@@ -81,6 +81,7 @@ public class NewOuttake extends SubSystem {
     public enum ToOuttakeState {
         WAIT_PLACE_FRONT,
         PLACE_FRONT,
+        FIRST_PLACE_FRONT,
         RETRACT_FROM_PLACE_BEHIND,
         WAIT_PLACE_BEHIND,
         PLACE_BEHIND,
@@ -161,6 +162,7 @@ public class NewOuttake extends SubSystem {
 
     public enum V4BarPos {
         PLACE_FRONT(.34 - .042),
+        FIRST_FRONT(.335 - .042),
         CLEAR_FRONT_BAR(.29 - .042),
 //        WAIT_FOR_TRANSFER(.35),
         RELEASE_HANG_HOOKS(.53 - .042),
@@ -189,13 +191,14 @@ public class NewOuttake extends SubSystem {
 
 
     public enum ClawPitch {
+        LESS_DOWN(.41 - .019),
         DOWN(.38 - .019),
         BACK(0.09 - .019),
         BACK_ANGLED_DOWN(.19 - .019),
         BACK2(1 - .019),
         TRANSFER(.416), //.435
         EXTRACT_FROM_TRANSFER(.32 - .019),
-        FRONT_ANGLED_UP(.78 - .019),
+        FRONT_ANGLED_UP(.81 - .019),
         FRONT_ANGELED_DOWN(.49),
 
         FRONT(.6- .019);
@@ -523,6 +526,17 @@ public class NewOuttake extends SubSystem {
                 break;
             case PLACE_FRONT:
                 extendPlaceFront();
+
+                toOuttakeState = ToOuttakeState.IDLE;
+                break;
+            case FIRST_PLACE_FRONT:
+                targetSlidePos = VerticalSlide.PLACE_SPECIMEN_BAR.length;
+
+                targetV4BPos = V4BarPos.FIRST_FRONT.pos;
+
+                targetClawPitch = ClawPitch.LESS_DOWN.pos;
+
+                outtakeState = OuttakeState.EXTENDING_PLACE_FRONT;
 
                 toOuttakeState = ToOuttakeState.IDLE;
                 break;

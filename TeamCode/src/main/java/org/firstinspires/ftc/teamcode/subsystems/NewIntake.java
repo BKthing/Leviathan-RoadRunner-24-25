@@ -123,6 +123,7 @@ public class NewIntake extends SubSystem {
     public enum ToIntakeState {
         EXTEND_THEN_DROP_INTAKE,
         DROP_INTAKE,
+        DROP_INTAKE_AUTO_SHOVE_HEIGHT,
         RAISE_INTAKE,
         PARTIAL_RAISE_INTAKE,
         RAISE_TO_AUTO_HEIGHT,
@@ -176,6 +177,7 @@ public class NewIntake extends SubSystem {
     public enum IntakePos {
         UP(.75),//.69
         AUTO_HEIGHT(.55),//.1),
+        AUTO_SHOVE_HEIGHT(.39),
         PARTIAL_UP(.5),//.11),
         SEARCH(.53),
         DOWN(.42);//.16);//.05
@@ -497,6 +499,11 @@ public class NewIntake extends SubSystem {
 
                 toIntakeState = ToIntakeState.IDLE;
                 break;
+            case DROP_INTAKE_AUTO_SHOVE_HEIGHT:
+                targetIntakePos = IntakePos.AUTO_SHOVE_HEIGHT.pos;
+
+                toIntakeState = ToIntakeState.IDLE;
+                break;
             case PARTIAL_RAISE_INTAKE:
                 targetIntakePos = IntakePos.PARTIAL_UP.pos;
 
@@ -638,11 +645,11 @@ public class NewIntake extends SubSystem {
 
                         intakeState = IntakeState.RETRACTING_INTAKE;
 
-                        if (!teleOpControls) {
+//                        if (!teleOpControls) {
                             intakingState = IntakingState.INTAKING_A_LITTLE_MORE;
-                        } else {
-                            intakingState = IntakingState.FINISH_INTAKING;
-                        }
+//                        } else {
+//                            intakingState = IntakingState.FINISH_INTAKING;
+//                        }
 
                         intakingTimer.reset();
                         intakeTimer.reset();
@@ -678,11 +685,11 @@ public class NewIntake extends SubSystem {
 
                         intakeState = IntakeState.RETRACTING_INTAKE;
 
-                        if (!teleOpControls) {
+//                        if (!teleOpControls) {
                             intakingState = IntakingState.INTAKING_A_LITTLE_MORE;
-                        } else {
-                            intakingState = IntakingState.FINISH_INTAKING;
-                        }
+//                        } else {
+//                            intakingState = IntakingState.FINISH_INTAKING;
+//                        }
 
                         intakingTimer.reset();
                         intakeTimer.reset();
