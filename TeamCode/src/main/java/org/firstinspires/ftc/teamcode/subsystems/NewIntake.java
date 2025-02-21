@@ -627,8 +627,7 @@ public class NewIntake extends SubSystem {
 
                 if (changedServoBusCurrent && servoStallTimer.seconds() > .3) {
                     intakingState = IntakingState.SERVO_STALL_START_UNJAMMING;
-                }
-                else if (checkColor) {
+                } else if (checkColor) {
 
                     sampleColor = findSampleColor();
 
@@ -639,7 +638,11 @@ public class NewIntake extends SubSystem {
 
                         intakeState = IntakeState.RETRACTING_INTAKE;
 
-                        intakingState = IntakingState.INTAKING_A_LITTLE_MORE;
+                        if (!teleOpControls) {
+                            intakingState = IntakingState.INTAKING_A_LITTLE_MORE;
+                        } else {
+                            intakingState = IntakingState.FINISH_INTAKING;
+                        }
 
                         intakingTimer.reset();
                         intakeTimer.reset();
@@ -675,7 +678,11 @@ public class NewIntake extends SubSystem {
 
                         intakeState = IntakeState.RETRACTING_INTAKE;
 
-                        intakingState = IntakingState.INTAKING_A_LITTLE_MORE;
+                        if (!teleOpControls) {
+                            intakingState = IntakingState.INTAKING_A_LITTLE_MORE;
+                        } else {
+                            intakingState = IntakingState.FINISH_INTAKING;
+                        }
 
                         intakingTimer.reset();
                         intakeTimer.reset();
@@ -710,8 +717,7 @@ public class NewIntake extends SubSystem {
             case FINISH_INTAKING:
                 if (changedServoBusCurrent && servoStallTimer.seconds() > .3) {
                     intakingState = IntakingState.SERVO_STALL_START_UNJAMMING;
-                }
-                else if (intakingTimer.seconds()>.8 || targetIntakeSpeed == 0) {
+                } if (intakingTimer.seconds()>.8 || targetIntakeSpeed == 0) {
 //                    targetIntakeSpeed = 0;
 
                     intakingState = IntakingState.HOLDING_SAMPLE;
@@ -1034,6 +1040,10 @@ public class NewIntake extends SubSystem {
 
     }
 
+    public boolean isBreakBeam() {
+        return isBreakBeam;
+    }
+
     public IntakingState getPrevIntakingState() {
         return prevIntakingState;
     }
@@ -1079,6 +1089,10 @@ public class NewIntake extends SubSystem {
         } else {
             return 4.125;
         }
+    }
+
+    public IntakeState getPrevIntakeState() {
+        return intakeState;
     }
 
     public void overrideSpinOut() {

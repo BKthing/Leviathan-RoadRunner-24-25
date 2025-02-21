@@ -179,7 +179,7 @@ public class NewDrivetrain extends SubSystem {
         firstMoveToGrabAccelConstraint = new ProfileAccelConstraint(-28, 60);
 
         moveToGrabVelConstraint = new MinVelConstraint(Arrays.asList(drive.kinematics.new WheelVelConstraint(70)));
-        moveToGrabAccelConstraint = new ProfileAccelConstraint(-35, 60);
+        moveToGrabAccelConstraint = new ProfileAccelConstraint(-32, 60);
 
         pidPointController = new PIDPointController(RobotConstants.pointPID, RobotConstants.headingPID, RobotConstants.trackWidth, RobotConstants.lateralF, RobotConstants.headingF);
 

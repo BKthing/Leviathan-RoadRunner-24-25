@@ -107,7 +107,7 @@ public class NewOuttake extends SubSystem {
     public enum VerticalSlide {
         EXTRA_DOWN(-.3),
         DOWN(0),
-        TRANSFER(5.55),
+        TRANSFER(5.65),
         EXTRACT_FROM_TRANSFER(9),
         MIN_PASSTHROUGH_HEIGHT(10),
         SPECIMEN_PICKUP(3.55),
@@ -115,7 +115,7 @@ public class NewOuttake extends SubSystem {
         SPECIMEN_BAR(8),
         PLACE_SPECIMEN_BAR(13.3),
         HANG_HEIGHT(21),
-        LOW_BUCKET_HEIGHT(20),
+        LOW_BUCKET_HEIGHT(3),
         HIGH_BUCKET(19.5),
         PULL_TO_FIRST_BAR(.3),
         GRAB_FIRST_BAR(3),
@@ -124,6 +124,8 @@ public class NewOuttake extends SubSystem {
         public final double length;
         VerticalSlide(double length) {this.length = length;}
     }
+
+    private boolean cycleHigh = true;
 
     private final ElapsedTimer slideTimer = new ElapsedTimer();
 
@@ -211,11 +213,11 @@ public class NewOuttake extends SubSystem {
 
 
     public enum ClawPosition {
-        EXTRA_OPEN(.28),//.49),
-        HANG_DEPLOY(.26),
-        OPEN(.22),//.36),//.15
-        PARTIALOPEN(.12),
-        CLOSED(.045);//.15);//.02
+        EXTRA_OPEN(.28),//.49),.28
+        HANG_DEPLOY(.26),// , .26
+        OPEN(.22),//.36), .22
+        PARTIALOPEN(.12),// , .12
+        CLOSED(.045);//.15), .045
 
 //        EXTRA_OPEN(.6),
 //        OPEN(.4),
@@ -465,9 +467,10 @@ public class NewOuttake extends SubSystem {
                     slideProfile = false;
                     slideVel = 0;
                 } else if (gamepad2.b && !oldGamePad2.b) {
-                    toOuttakeState = ToOuttakeState.PLACE_FRONT;
-                    slideProfile = false;
-                    slideVel = 0;
+                    cycleHigh = !cycleHigh;
+//                    toOuttakeState = ToOuttakeState.PLACE_FRONT;
+//                    slideProfile = false;
+//                    slideVel = 0;
                 } else if (gamepad2.x && !oldGamePad2.x) {
                     if (clawPosition == ClawPosition.OPEN) {
                         clawPosition = ClawPosition.PARTIALOPEN;
@@ -1087,7 +1090,11 @@ public class NewOuttake extends SubSystem {
     }
 
     private void extendPlaceBehind() {
-        targetSlidePos = VerticalSlide.HIGH_BUCKET.length;
+        if (cycleHigh) {
+            targetSlidePos = VerticalSlide.HIGH_BUCKET.length;
+        } else {
+            targetSlidePos = VerticalSlide.LOW_BUCKET_HEIGHT.length;
+        }
 
         if (targetV4BPos > V4BarPos.MID_POSITION_CUTOFF.pos) {
             if (clawPosition != ClawPosition.CLOSED){

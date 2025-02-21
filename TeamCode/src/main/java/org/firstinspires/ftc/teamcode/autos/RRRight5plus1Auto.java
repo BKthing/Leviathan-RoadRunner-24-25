@@ -99,7 +99,7 @@ public class RRRight5plus1Auto extends LinearOpMode {
                 })
                 .splineToConstantHeading(new Vector2d(-10, 37), Math.toRadians(180))
                 .splineToSplineHeading(new Pose2d(-25.5, 40.5, Math.toRadians(235)), Math.toRadians(180))
-                .turn(Math.toRadians(-72), new TurnConstraints(5 *Math.PI, -2 *Math.PI, 4 *Math.PI))
+                .turn(Math.toRadians(-75), new TurnConstraints(5 *Math.PI, -2 *Math.PI, 4 *Math.PI))
                 .afterTime(.1, () -> {
                     intake.toIntakeState(NewIntake.ToIntakeState.RAISE_INTAKE);
                     intake.setTargetSlidePos(18.5);
@@ -310,7 +310,7 @@ public class RRRight5plus1Auto extends LinearOpMode {
         @Override
         public boolean run(@NonNull TelemetryPacket telemetryPacket) {
             if (firstLoop) {
-                if (intake.getPrevIntakingState() == NewIntake.IntakingState.INTAKING) {
+                if (!intake.isBreakBeam() && (intake.getPrevIntakeState() == NewIntake.IntakeState.RETRACTING_INTAKE || intake.getPrevIntakeState() == NewIntake.IntakeState.RETRACTING || intake.getPrevIntakeState() == NewIntake.IntakeState.WAITING_AFTER_RETRACTING || intake.getPrevIntakeState() == NewIntake.IntakeState.WAITING_FOR_TRANSFER)) {
                     intake.setIntakingState(NewIntake.IntakingState.START_EJECTING_PARTIAL_GRAB);
                     return false;
                 } else {
@@ -319,7 +319,7 @@ public class RRRight5plus1Auto extends LinearOpMode {
                     return true;
                 }
             } else {
-                if (outtake.getOuttakeState() == NewOuttake.OuttakeState.WAITING_PLACE_BEHIND || outtake.getFailedToTransfer() || intake.getPrevIntakingState() == NewIntake.IntakingState.INTAKING) {
+                if (outtake.getOuttakeState() == NewOuttake.OuttakeState.WAITING_PLACE_BEHIND || outtake.getFailedToTransfer()) {// || intake.getPrevIntakingState() == NewIntake.IntakingState.INTAKING
                     outtake.toClawPosition(NewOuttake.ClawPosition.OPEN);
                     return false;
                 } else {

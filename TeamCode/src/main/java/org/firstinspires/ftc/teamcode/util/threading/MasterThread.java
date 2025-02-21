@@ -100,7 +100,7 @@ public class MasterThread {
         subSystems.addAll(Arrays.asList(subSystem));
     }
 
-    public void unThreadedUpdate() throws InterruptedException {
+    public void unThreadedUpdate() {
         packet = new TelemetryPacket();
 
         //passes an instance so that all subsystems will run with the same set of buttons pressed
