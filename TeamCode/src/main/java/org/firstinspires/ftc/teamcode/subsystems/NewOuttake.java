@@ -348,6 +348,7 @@ public class NewOuttake extends SubSystem {
             PassData.horizontalSlidesInitiated = true;
         }
 
+
         newTargetSlidePos = targetSlidePos;
 
         if (init) {

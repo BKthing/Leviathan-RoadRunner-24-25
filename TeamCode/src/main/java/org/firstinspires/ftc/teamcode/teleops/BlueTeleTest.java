@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.reefsharklibrary.misc.ElapsedTimer;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.subsystems.AndySub;
 import org.firstinspires.ftc.teamcode.subsystems.NewDrivetrain;
 import org.firstinspires.ftc.teamcode.subsystems.NewIntake;
 import org.firstinspires.ftc.teamcode.subsystems.NewOuttake;
@@ -39,7 +40,6 @@ public class BlueTeleTest extends LinearOpMode {
         loopTime = telemetry.addData("Loop time:", loopTimer.milliSeconds());
 
         masterThread = new MasterThread(hardwareMap, telemetry, gamepad1, gamepad2);
-
 
 
         horizontalSlideEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, "horizontalLeft"));
