@@ -116,7 +116,7 @@ public class NewOuttake extends SubSystem {
         SPECIMEN_BAR(8),
         PLACE_SPECIMEN_BAR(13.3),
         HANG_HEIGHT(21),
-        LOW_BUCKET_HEIGHT(3),
+        LOW_BUCKET_HEIGHT(5.65),//3
         HIGH_BUCKET(19.5),
         PULL_TO_FIRST_BAR(.3),
         GRAB_FIRST_BAR(3),
@@ -471,9 +471,17 @@ public class NewOuttake extends SubSystem {
                     slideVel = 0;
                 } else if (gamepad2.b && !oldGamePad2.b) {
                     cycleHigh = !cycleHigh;
-//                    toOuttakeState = ToOuttakeState.PLACE_FRONT;
-//                    slideProfile = false;
-//                    slideVel = 0;
+
+                    if (cycleHigh) {
+                        if (targetSlidePos == VerticalSlide.LOW_BUCKET_HEIGHT.length) {
+                            targetSlidePos = VerticalSlide.HIGH_BUCKET.length;
+                        }
+                    } else {
+                        if (targetSlidePos == VerticalSlide.HIGH_BUCKET.length) {
+                            targetSlidePos = VerticalSlide.LOW_BUCKET_HEIGHT.length;
+                        }
+                    }
+
                 } else if (gamepad2.x && !oldGamePad2.x) {
                     if (clawPosition == ClawPosition.OPEN) {
                         clawPosition = ClawPosition.PARTIALOPEN;
