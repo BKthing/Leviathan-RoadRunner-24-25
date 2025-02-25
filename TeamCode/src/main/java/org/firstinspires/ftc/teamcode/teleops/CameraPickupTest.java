@@ -286,10 +286,10 @@ public class CameraPickupTest extends LinearOpMode {
                     if (drivetrain.getHoldPointError().minimizeHeading(Math.PI, -Math.PI).inRange(new com.reefsharklibrary.data.Pose2d(1, 1, Math.toRadians(3.5)))) {
                         intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
                         intake.setIntakingState(NewIntake.IntakingState.START_INTAKING);
-                        grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.INTAKING;
+                        grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.INTAKING_1;
                     }
                     break;
-                case INTAKING:
+                case INTAKING_1:
 //                    if (intake.getPrevIntakingState() != NewIntake.IntakingState.INTAKING && intake.getPrevIntakingState() != NewIntake.IntakingState.START_INTAKING && intake.getPrevIntakingState() != NewIntake.IntakingState.SERVO_STALL_START_UNJAMMING && intake.getPrevIntakingState() != NewIntake.IntakingState.SERVO_STALL_UNJAMMING_SPIN_OUT) {
 //                        return false;
 //                    }

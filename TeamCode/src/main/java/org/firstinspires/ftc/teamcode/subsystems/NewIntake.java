@@ -374,7 +374,7 @@ public class NewIntake extends SubSystem {
 
 //        checkColor = nextCheckColor;
 
-        if (!checkColor && (((isBreakBeam && !prevIsBreakBeam) && intakingState == IntakingState.INTAKING) || (teleOpControls && isBreakBeam && gamepad2.left_bumper && !oldGamePad2.left_bumper))) {
+        if (!checkColor && (((isBreakBeam) && intakingState == IntakingState.INTAKING) || (teleOpControls && isBreakBeam && gamepad2.left_bumper && !oldGamePad2.left_bumper))) {
             colorReads = 0;
             checkColor = true;
             if (blueAlliance != null) {
@@ -920,7 +920,7 @@ public class NewIntake extends SubSystem {
                 }
                 break;
             case WAITING_FOR_TRANSFER:
-                if (intakingState == IntakingState.HOLDING_SAMPLE || intakingState == IntakingState.FINISH_INTAKING) {
+                if (intakingState == IntakingState.HOLDING_SAMPLE || intakingState == IntakingState.FINISH_INTAKING || intakingState == IntakingState.UNJAMMING_FINISH_SPIN_IN) {
                     if (isBreakBeam) {
                         transfer = true;
                         intakeState = IntakeState.WAITING_FOR_TRANSFERRING;
@@ -957,7 +957,7 @@ public class NewIntake extends SubSystem {
                 break;
         }
 
-        intakeTelem.setValue(intakeState.name());
+        intakeTelem.setValue(intakeState.name() + " Intaking state: " + intakingState.name());
         colorTelem.setValue(checkColor + " cur:" + isBreakBeam + " prev:" + prevIsBreakBeam);
 
         servoBusCurrentTelem.setValue(servoBusCurrent);
