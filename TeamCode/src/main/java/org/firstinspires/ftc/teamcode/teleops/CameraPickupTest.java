@@ -93,7 +93,7 @@ public class CameraPickupTest extends LinearOpMode {
         drivetrain.setDriveState(NewDrivetrain.DriveState.FOLLOW_PATH);
 
 
-        vision = new VisionSubsystem(drivetrain, masterThread.getData(), blueAlliance);
+        vision = new VisionSubsystem(drivetrain, masterThread.getData(), blueAlliance, false);
 
         hasSampleTelem = telemetry.addData("Has sample", "");
 

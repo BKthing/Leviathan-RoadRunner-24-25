@@ -40,6 +40,7 @@ public class NewOuttake extends SubSystem {
         MOVING_TO_CLEAR_FRONT_BAR,
         MOVING_DOWN_TO_RETRACT,
         MOVING_ARM_BACK,
+        RETRACTING_FROM_FRONT_CLOSE_CLAW,
         RETRACING_FROM_PLACE_FRONT_CLEAR_INTAKE,
 
         MOVING_TO_DROP_HANG_HOOKS,
@@ -161,22 +162,22 @@ public class NewOuttake extends SubSystem {
     private double voltage = 13;
 
     public enum V4BarPos {
-        PLACE_FRONT(.34 - .042),
-        FIRST_FRONT(.335 - .042),
-        CLEAR_FRONT_BAR(.29 - .042),
+        PLACE_FRONT(.34 - .042 -.007),
+        FIRST_FRONT(.335 - .042-.007),
+        CLEAR_FRONT_BAR(.29 - .042-.007),
 //        WAIT_FOR_TRANSFER(.35),
-        RELEASE_HANG_HOOKS(.53 - .042),
-        MID_POSITION_CUTOFF(.55 - .042),
-        WAITING_FOR_HANG_DEPLOY(.363),//.42
+        RELEASE_HANG_HOOKS(.53 - .042-.007),
+        MID_POSITION_CUTOFF(.55 - .042-.007),
+        WAITING_FOR_HANG_DEPLOY(.363-.007),//.42
         // hello brett my king
-        INIT(.37),
-        TRANSFER(.446), //.444
-        GRAB_BACK(.63 - .042),
-        WAIT_PLACE_BACK(.14 - .042),
-        PLACE_BACK(.12 - .042),//.07
-        HANG_POS(.23 - .042),
-        IDLE_POSITION(.41 - .042),
-        TOUCH_BAR(.339 - .042);
+        INIT(.37-.007),
+        TRANSFER(.438), //.444
+        GRAB_BACK(.63 - .042-.007),
+        WAIT_PLACE_BACK(.14 - .042-.007),
+        PLACE_BACK(.12 - .042-.007),//.07
+        HANG_POS(.23 - .042-.007),
+        IDLE_POSITION(.41 - .042-.007),
+        TOUCH_BAR(.339 - .042-.007);
 
         public final double pos;
 
@@ -191,17 +192,27 @@ public class NewOuttake extends SubSystem {
 
 
     public enum ClawPitch {
-        LESS_DOWN(.41 - .019),
-        DOWN(.38 - .019),
-        BACK(0.09 - .019),
-        BACK_ANGLED_DOWN(.19 - .019),
-        BACK2(1 - .019),
-        TRANSFER(.416), //.435
-        EXTRACT_FROM_TRANSFER(.32 - .019),
-        FRONT_ANGLED_UP(.81 - .019),
-        FRONT_ANGELED_DOWN(.49),
+        LESS_DOWN(.7543),
+        DOWN(.7668),
+        BACK(.9323),
+        BACK_ANGLED_DOWN(.8543),
+        BACK2(.3215),
+        TRANSFER(.7008), //.435
+        FRONT_ANGLED_UP(.4644),
 
-        FRONT(.6- .019);
+        FRONT(.6008);
+
+//        LESS_DOWN(.41 - .019),
+//        DOWN(.38 - .019),
+//        BACK(0.09 - .019),
+//        BACK_ANGLED_DOWN(.19 - .019),
+//        BACK2(1 - .019),
+//        TRANSFER(.416), //.435
+//        EXTRACT_FROM_TRANSFER(.32 - .019),
+//        FRONT_ANGLED_UP(.81 - .019),
+//        FRONT_ANGELED_DOWN(.49),
+//
+//        FRONT(.6- .019);
 
         public final double pos;
 
@@ -216,11 +227,11 @@ public class NewOuttake extends SubSystem {
 
 
     public enum ClawPosition {
-        EXTRA_OPEN(.28),//.49),.28
-        HANG_DEPLOY(.26),// , .26
-        OPEN(.22),//.36), .22
-        PARTIALOPEN(.12),// , .12
-        CLOSED(.045);//.15), .045
+        EXTRA_OPEN(.26),//.29
+        HANG_DEPLOY(.247),//.26
+        OPEN(.2),//.22
+        PARTIALOPEN(.115),//.12
+        CLOSED(.045);//.045
 
 //        EXTRA_OPEN(.6),
 //        OPEN(.4),
@@ -273,6 +284,8 @@ public class NewOuttake extends SubSystem {
     private double transferAttemptCounter = 0;
 
     private final double maxTransferAttempts = 2;
+
+    private boolean specimenDropBehind = false;
 
     private final Servo clawServo, clawPitchServo, leftOuttakeServo, rightOuttakeServo;
 
@@ -740,7 +753,13 @@ public class NewOuttake extends SubSystem {
                 }
                 break;
 
-
+            case RETRACTING_FROM_FRONT_CLOSE_CLAW:
+                if (outtakeTimer.seconds()>.1) {
+                    targetV4BPos = V4BarPos.GRAB_BACK.pos;
+                    outtakeState = OuttakeState.RETRACING_FROM_PLACE_FRONT_CLEAR_INTAKE;
+                    outtakeTimer.reset();
+                }
+                break;
             case RETRACING_FROM_PLACE_FRONT_CLEAR_INTAKE:
                 if (outtakeTimer.seconds()>.2) {
                     targetClawPitch = ClawPitch.BACK_ANGLED_DOWN.pos;
@@ -1024,11 +1043,11 @@ public class NewOuttake extends SubSystem {
                     } else
 
                      if (autoExtendSlides) {
-//                        if ( cycleSpecimen && (blueAlliance == null || sampleColor != NewIntake.SampleColor.YELLOW)) {
-//                            dropBehind();
-//                        } else {
+                        if ( specimenDropBehind && (blueAlliance == null || sampleColor != NewIntake.SampleColor.YELLOW)) {
+                            dropBehind();
+                        } else {
                             extendPlaceBehind();
-//                        }
+                        }
                     } else {
                         outtakeState = OuttakeState.IDLE;
                     }
@@ -1167,7 +1186,6 @@ public class NewOuttake extends SubSystem {
 //    private void extend
 
     private void dropBehind() {
-        targetV4BPos = V4BarPos.GRAB_BACK.pos;
         targetClawPitch = ClawPitch.FRONT.pos;
         if (clawPosition != ClawPosition.CLOSED){
             clawPosition = ClawPosition.PARTIALOPEN;
@@ -1180,7 +1198,7 @@ public class NewOuttake extends SubSystem {
 
         outtakeTimer.reset();
 
-        outtakeState = OuttakeState.RETRACING_FROM_PLACE_FRONT_CLEAR_INTAKE;
+        outtakeState = OuttakeState.RETRACTING_FROM_FRONT_CLOSE_CLAW;
     }
 
     private void retractFromFront() {
@@ -1224,6 +1242,10 @@ public class NewOuttake extends SubSystem {
         changedToOuttakeState = true;
     }
 
+    public void outtakeState(OuttakeState outtakeState) {
+        this.outtakeState = outtakeState;
+    }
+
     public void toClawPosition(ClawPosition clawPosition) {
         newClawPosition = clawPosition;
         changedClawPosition = true;
@@ -1256,6 +1278,10 @@ public class NewOuttake extends SubSystem {
     public void stopMotors() {
         verticalLeftMotor.setPower(0);
         verticalRightMotor.setPower(0);
+    }
+
+    public void setSpecimenDropBehind(boolean specimenDropBehind) {
+        this.specimenDropBehind = specimenDropBehind;
     }
 
 }

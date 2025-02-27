@@ -43,7 +43,7 @@ public class VisionSubsystem extends SubSystem {
 
 
 
-    public VisionSubsystem(NewDrivetrain drivetrain, SubSystemData data, Boolean blueAlliance) {
+    public VisionSubsystem(NewDrivetrain drivetrain, SubSystemData data, Boolean blueAlliance, boolean grabAllianceColor) {
         super(data);
 
         this.drivetrain = drivetrain;
@@ -51,6 +51,8 @@ public class VisionSubsystem extends SubSystem {
         pipeline = new VectorFieldIntakePipeline();
 
         this.blueAlliance = blueAlliance != null ? blueAlliance : true;
+
+        this.pipeline.setGrabAllianceColor(grabAllianceColor);
 
         pipeline.setBlueAlliance(this.blueAlliance);
         pipeline.setDisplayType(VectorFieldIntakePipeline.DisplayType.BLOCK_VECTOR_FIELD);

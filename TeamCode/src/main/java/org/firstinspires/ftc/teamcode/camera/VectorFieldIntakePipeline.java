@@ -33,6 +33,8 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
 
     private boolean blueAlliance = false;
 
+    private boolean grabAllianceColor = false;
+
     Scalar lowB = new Scalar(105, 120, 20);
     Scalar highB = new Scalar(150, 255, 250);
 
@@ -146,11 +148,19 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
 
         if (blueAlliance) {
             blockPullVectorField.setTo(pull, maskBlue);
-            blockPullVectorField.setTo(pull, maskYellow);
+            if (grabAllianceColor) {
+                blockPushVectorField.setTo(push, maskYellow);
+            } else {
+                blockPullVectorField.setTo(pull, maskYellow);
+            }
             blockPushVectorField.setTo(push, maskRed);
         } else {
             blockPullVectorField.setTo(pull, maskRed);
-            blockPullVectorField.setTo(pull, maskYellow);
+            if (grabAllianceColor) {
+                blockPushVectorField.setTo(push, maskYellow);
+            } else {
+                blockPullVectorField.setTo(pull, maskYellow);
+            }
             blockPushVectorField.setTo(push, maskBlue);
         }
 
@@ -246,6 +256,10 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
 
     public void setBlueAlliance(boolean blueAlliance) {
         this.blueAlliance = blueAlliance;
+    }
+
+    public void setGrabAllianceColor(boolean grabAllianceColor) {
+        this.grabAllianceColor = grabAllianceColor;
     }
 
     private Vector2d searchField (Mat mat, Vector2d startPoint, int reach) {

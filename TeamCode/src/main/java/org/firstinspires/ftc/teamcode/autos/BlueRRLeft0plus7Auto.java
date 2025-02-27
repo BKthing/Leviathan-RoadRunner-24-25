@@ -97,7 +97,7 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
         drivetrain.setDriveState(NewDrivetrain.DriveState.FOLLOW_PATH);
 
 
-        vision = new VisionSubsystem(drivetrain, masterThread.getData(), blueAlliance);
+        vision = new VisionSubsystem(drivetrain, masterThread.getData(), blueAlliance, false);
 
         //its important that outtake is added after intake for update order purposes
         masterThread.addSubSystems(

@@ -91,7 +91,7 @@ public class RRTest extends LinearOpMode {
 
 
 
-        vision = new VisionSubsystem(drivetrain, masterThread.getData(), blueAlliance);
+        vision = new VisionSubsystem(drivetrain, masterThread.getData(), blueAlliance, false);
 
         //its important that outtake is added after intake for update order purposes
         masterThread.addSubSystems(

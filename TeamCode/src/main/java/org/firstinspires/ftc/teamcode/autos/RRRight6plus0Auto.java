@@ -8,6 +8,7 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.InstantAction;
 import com.acmerobotics.roadrunner.MinVelConstraint;
+import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.ProfileAccelConstraint;
 import com.acmerobotics.roadrunner.SequentialAction;
@@ -18,12 +19,14 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.TouchSensor;
+import com.reefsharklibrary.data.Rotation;
 import com.reefsharklibrary.misc.ElapsedTimer;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.subsystems.NewDrivetrain;
 import org.firstinspires.ftc.teamcode.subsystems.NewIntake;
 import org.firstinspires.ftc.teamcode.subsystems.NewOuttake;
+import org.firstinspires.ftc.teamcode.subsystems.VisionSubsystem;
 import org.firstinspires.ftc.teamcode.util.Encoder;
 import org.firstinspires.ftc.teamcode.util.MathUtil;
 import org.firstinspires.ftc.teamcode.util.threading.MasterThread;
@@ -31,7 +34,7 @@ import org.firstinspires.ftc.teamcode.util.threading.MasterThread;
 import java.util.Arrays;
 
 @Autonomous
-public class RRRight5plus1Auto extends LinearOpMode {
+public class RRRight6plus0Auto extends LinearOpMode {
     NewDrivetrain drivetrain;
     NewIntake intake;
     NewOuttake outtake;
@@ -43,6 +46,20 @@ public class RRRight5plus1Auto extends LinearOpMode {
     ElapsedTimer autoTimer = new ElapsedTimer();
 
     double loopTime = .05;
+
+    double timeThreshold = -1;
+
+    double targetHeading = Math.toRadians(270);
+
+    double prevHeading = targetHeading;
+
+    double maxGrabAngle = Math.toRadians(285);
+    double minGrabAngle = Math.toRadians(255);
+
+    VisionSubsystem vision;
+
+
+    com.reefsharklibrary.data.Vector2d holdPoint = new com.reefsharklibrary.data.Vector2d(-4, 32);
 
     double extensionDistance = 0;
 
@@ -71,12 +88,14 @@ public class RRRight5plus1Auto extends LinearOpMode {
         drivetrain = new NewDrivetrain(masterThread.getData(), outtake, intake);
         drivetrain.setDriveState(NewDrivetrain.DriveState.FOLLOW_PATH);
 
+        vision = new VisionSubsystem(drivetrain, masterThread.getData(), blueAlliance, true);
 
         //its important that outtake is added after intake for update order purposes
         masterThread.addSubSystems(
                 drivetrain,
                 intake,
-                outtake
+                outtake,
+                vision
         );
 
 
@@ -120,7 +139,7 @@ public class RRRight5plus1Auto extends LinearOpMode {
                 })
                 .setTangent(Math.toRadians(270))
                 .splineToSplineHeading(new Pose2d(-57.5, 12.5, Math.toRadians(270)), Math.toRadians(180), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-20, PARAMS.maxProfileAccel))
-                .splineToConstantHeading(new Vector2d(-60.5, 15.5), Math.toRadians(90), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(35))), new ProfileAccelConstraint(-20, PARAMS.maxProfileAccel))
+                .splineToConstantHeading(new Vector2d(-59.5, 15.5), Math.toRadians(90), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(35))), new ProfileAccelConstraint(-20, PARAMS.maxProfileAccel))
                 .lineToYConstantHeading(49, new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-40, PARAMS.maxProfileAccel))
                 .splineToConstantHeading(new Vector2d(-55.5,60.9), Math.toRadians(80), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-35, PARAMS.maxProfileAccel))
                 .build();
@@ -179,19 +198,18 @@ public class RRRight5plus1Auto extends LinearOpMode {
 
         Action moveToScoreSpecimen4 = drivetrain.drive.actionBuilder(new Pose2d(-37, 60.3, Math.toRadians(270)))
                 .setTangent(new com.reefsharklibrary.data.Vector2d(-4, 29.5).minus(new com.reefsharklibrary.data.Vector2d(-37, 60.7)).getDirection())
+                .afterTime(0.3, () -> {
+                    intake.toIntakeState(NewIntake.ToIntakeState.SEARCH_POSITION);
+                    extensionDistance = 3;
+                })
                 .lineToY(29.5, moveToScoreVelConstraint, moveToScoreAccelConstraint)
                 .build();
 
         Action moveToGrabSpecimen5 = drivetrain.drive.actionBuilder(new Pose2d(-4, 29.5, Math.toRadians(270)))
                 .setTangent(Math.toRadians(115))
-                .afterTime(.75, () -> {
-                    outtake.toOuttakeState(NewOuttake.ToOuttakeState.WAIT_DROP_BEHIND);
-                })
                 .splineToConstantHeading(new Vector2d(-37, 59), Math.toRadians(90), firstMoveToGrabVelConstraint, firstMoveToGrabAccelConstraint)
-                .afterTime(.1, () -> {
-                    outtake.toClawPosition(NewOuttake.ClawPosition.CLOSED);
-                })
-                .lineToY(60.3, moveToGrabVelConstraint, moveToGrabAccelConstraint)
+                .lineToY(58, moveToGrabVelConstraint, moveToGrabAccelConstraint)
+//                .lineToY(60.3, moveToGrabVelConstraint, moveToGrabAccelConstraint)
                 .waitSeconds(.2)
                 .build();
 
@@ -261,27 +279,45 @@ public class RRRight5plus1Auto extends LinearOpMode {
                 moveToGrabSpecimen4,
 //                new InstantAction(() -> outtake.toClawPosition(NewOuttake.ClawPosition.CLOSED)),
                 moveToScoreSpecimen4,
-                new InstantAction(() -> outtake.toClawPosition(NewOuttake.ClawPosition.OPEN)),
-                moveToGrabSpecimen5,
-//                new InstantAction(() -> outtake.toClawPosition(NewOuttake.ClawPosition.CLOSED)),
-                moveToScoreSpecimen5,
                 new InstantAction(() -> {
                     outtake.toClawPosition(NewOuttake.ClawPosition.OPEN);
-                    outtake.toOuttakeState(NewOuttake.ToOuttakeState.IDLE);
+                    outtake.outtakeState(NewOuttake.OuttakeState.IDLE);
+                    outtake.setSpecimenDropBehind(true);
+                    drivetrain.holdPoint(holdPoint.toPose(Math.toRadians(270)));
+
+
+                    autoTimer.reset();
                 }),
-                moveToGrab3,
-                intakeBlock,
-                scoreBasket,
-                new ScoreBlock(),
                 new SleepAction(.2),
-                new InstantAction(() -> {
-                    drivetrain.holdPoint(new com.reefsharklibrary.data.Pose2d(-14, 56, Math.toRadians(176)));
-                }),
-                new SleepAction(.3),
-                new InstantAction(() -> {
-                    intake.setTargetSlidePos(18.5);
-                    intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
-                })
+                new ParallelAction(
+                    new GrabFromSubmersible(),
+                    new SequentialAction(
+                        new SleepAction(.4),
+                        new InstantAction(() -> {
+                            outtake.toOuttakeState(NewOuttake.ToOuttakeState.RETRACT_FROM_PLACE_BEHIND);
+                        })
+                    )
+                ),
+                moveToGrabSpecimen5
+////                new InstantAction(() -> outtake.toClawPosition(NewOuttake.ClawPosition.CLOSED)),
+//                moveToScoreSpecimen5,
+//                new InstantAction(() -> {
+//                    outtake.toClawPosition(NewOuttake.ClawPosition.OPEN);
+//                    outtake.toOuttakeState(NewOuttake.ToOuttakeState.IDLE);
+//                }),
+//                moveToGrab3,
+//                intakeBlock,
+//                scoreBasket,
+//                new ScoreBlock(),
+//                new SleepAction(.2),
+//                new InstantAction(() -> {
+//                    drivetrain.holdPoint(new com.reefsharklibrary.data.Pose2d(-14, 56, Math.toRadians(176)));
+//                }),
+//                new SleepAction(.3),
+//                new InstantAction(() -> {
+//                    intake.setTargetSlidePos(18.5);
+//                    intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
+//                })
 //                moveToPark
                 ));
 
@@ -335,6 +371,160 @@ public class RRRight5plus1Auto extends LinearOpMode {
                     return true;
                 }
             }
+        }
+    }
+
+    public class GrabFromSubmersible implements Action {
+        BlueRRLeft0plus7Auto.GrabFromSubmersibleState grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.SEARCHING;
+
+        boolean searching = false;
+        Action searchTurn;
+
+        @Override
+        public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+
+            if (intake.getPrevIntakingState() == NewIntake.IntakingState.FINISH_EJECTING || intake.getPrevIntakingState() == NewIntake.IntakingState.START_EJECTING) {
+                grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.EJECTING;
+            }
+
+            if (intake.getPrevIntakingState() == NewIntake.IntakingState.INTAKING_A_LITTLE_MORE || intake.getPrevIntakingState() == NewIntake.IntakingState.INTAKING_SPIN_OUT || intake.getPrevIntakingState() == NewIntake.IntakingState.FINISH_INTAKING) {
+                timeThreshold = -1;
+                drivetrain.cancelHoldPoint();
+                return false;
+            }
+
+            switch (grabFromSubmersibleState) {
+                case SEARCHING:
+                    if (vision.hasSample()) {
+                        targetHeading = MathUtil.clip(Rotation.inRange(prevHeading+Rotation.inRange((vision.getTargetRobotPose().getHeading()-prevHeading), Math.PI, -Math.PI)*.3, 2*Math.PI, 0), minGrabAngle, maxGrabAngle);
+
+                        drivetrain.holdPoint(holdPoint.toPose(targetHeading));
+
+                        autoTimer.reset();
+                        grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.APPROACHING_HEADING;
+                    } else if (autoTimer.seconds()>.5) {
+                        if (!searching) {
+                            drivetrain.cancelHoldPoint();
+                            searchTurn = drivetrain.drive.actionBuilder(MathUtil.toRoadRunnerPose(holdPoint.toPose(Math.toRadians(270))))
+                                    .turnTo(maxGrabAngle, new TurnConstraints(.1 *Math.PI, -2 *Math.PI, 2 *Math.PI))
+                                    .turnTo(minGrabAngle, new TurnConstraints(.1 *Math.PI, -2 *Math.PI, 2 *Math.PI))
+                                    .build();
+                            searching = true;
+                        }
+                        searching = searchTurn.run(telemetryPacket);
+                    }
+                    break;
+                case APPROACHING_HEADING:
+                    targetHeading = MathUtil.clip(Rotation.inRange(prevHeading+Rotation.inRange((vision.getTargetRobotPose().getHeading()-prevHeading), Math.PI, -Math.PI)*.15, 2*Math.PI, 0), minGrabAngle, maxGrabAngle);
+
+                    if (Math.abs(drivetrain.getHoldPointError().minimizeHeading(Math.PI, -Math.PI).getHeading())<Math.toRadians(5)) {
+                        grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.APPROACHING;
+
+                        extensionDistance = Math.max(vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset() - intake.getActualSlidePos() - 6.3, 2.5);//Math.max(extensionDistance+(vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset() - 4)*.125, 3);
+                        intake.setTargetSlidePos(extensionDistance);
+                    }
+                    break;
+                case APPROACHING:
+                    //adjustSlides
+//                        double newExtensionDistance = Math.max(extensionDistance+(vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset() - 4)*.125, 3);
+//                        if (Math.abs(newExtensionDistance - extensionDistance) > .1) {
+//                            extensionDistance = newExtensionDistance;
+//                            intake.setTargetSlidePos(extensionDistance);
+//                        }
+
+                    //adjust holdPoint heading
+                    targetHeading = MathUtil.clip(Rotation.inRange(prevHeading+Rotation.inRange((vision.getTargetRobotPose().getHeading()-prevHeading), Math.PI, -Math.PI)*.15, 2*Math.PI, 0), minGrabAngle, maxGrabAngle);
+
+                    drivetrain.holdPoint(holdPoint.toPose(targetHeading));//, maxGrabAngle
+
+
+                    if (drivetrain.getHoldPointError().minimizeHeading(Math.PI, -Math.PI).inRange(new com.reefsharklibrary.data.Pose2d(1, 1, Math.toRadians(3.5)))) {
+                        intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
+                        intake.setIntakingState(NewIntake.IntakingState.START_INTAKING);
+                        grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.INTAKING_1;
+                        autoTimer.reset();
+                    }
+                    break;
+                case INTAKING_1:
+//hello brett king
+                    if (autoTimer.seconds()>.5) {
+                        grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.RETRACTING;
+                    } else {
+                        targetHeading = MathUtil.clip(Rotation.inRange(prevHeading + Rotation.inRange((vision.getTargetRobotPose().getHeading() - prevHeading), Math.PI, -Math.PI) * .15, 2 * Math.PI, 0), minGrabAngle, maxGrabAngle);
+
+                        drivetrain.holdPoint(holdPoint.toPose(targetHeading));
+
+                        extensionDistance = MathUtil.clip(extensionDistance + 12 * loopTime, -.5, 18.5);
+                        intake.setTargetSlidePos(extensionDistance);
+
+                    }
+                    break;
+                case RETRACTING:
+
+                    if (autoTimer.seconds()>.5+.4 || extensionDistance == 2) {
+                        grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.INTAKING_2;
+                    } else {
+                        targetHeading = MathUtil.clip(Rotation.inRange(prevHeading + Rotation.inRange((vision.getTargetRobotPose().getHeading() - prevHeading), Math.PI, -Math.PI) * .15, 2 * Math.PI, 0), minGrabAngle, maxGrabAngle);
+
+                        drivetrain.holdPoint(holdPoint.toPose(targetHeading));
+
+                        extensionDistance = MathUtil.clip(extensionDistance - 12 * loopTime, 2, 18.5);
+                        intake.setTargetSlidePos(extensionDistance);
+
+                    }
+                    break;
+                case INTAKING_2:
+
+                    targetHeading = MathUtil.clip(Rotation.inRange(prevHeading + Rotation.inRange((vision.getTargetRobotPose().getHeading() - prevHeading), Math.PI, -Math.PI) * .15, 2 * Math.PI, 0), minGrabAngle, maxGrabAngle);
+
+                    drivetrain.holdPoint(holdPoint.toPose(targetHeading));
+
+                    if (autoTimer.seconds() > 2) {
+                        intake.toIntakeState(NewIntake.ToIntakeState.SEARCH_POSITION);
+                        double curHeading = drivetrain.getPoseEstimate().getHeading();
+
+                        if (curHeading > Math.toRadians(273)) {
+                            targetHeading = Math.toRadians(267);
+                            drivetrain.holdPoint(holdPoint.toPose(Math.toRadians(265)));
+                        } else if (curHeading < Math.toRadians(267)) {
+                            targetHeading = Math.toRadians(273);
+                            drivetrain.holdPoint(holdPoint.toPose(Math.toRadians(275)));
+                        } else {
+                            targetHeading = Math.toRadians(265);
+                            drivetrain.holdPoint(holdPoint.toPose(Math.toRadians(265)));
+                        }
+
+                        grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.RESETTING;
+                    } else {
+                        extensionDistance = MathUtil.clip(extensionDistance + 12 * loopTime, -.5, 18.5);
+                        intake.setTargetSlidePos(extensionDistance);
+                    }
+
+                    break;
+                case EJECTING:
+                    if (intake.getPrevIntakingState() == NewIntake.IntakingState.IDLE) {
+
+                        intake.toIntakeState(NewIntake.ToIntakeState.SEARCH_POSITION);
+                        extensionDistance = 1;
+                        drivetrain.holdPoint(holdPoint.toPose(Math.toRadians(270)));
+
+                        grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.RESETTING;
+                    }
+                    break;
+                case RESETTING:
+                    if (drivetrain.getHoldPointError().minimizeHeading(Math.PI, -Math.PI).inRange(new com.reefsharklibrary.data.Pose2d(1, 1, Math.toRadians(3.5)))) {
+                        grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.SEARCHING;
+                        extensionDistance = 1;
+                        autoTimer.reset();
+                    }
+                    break;
+            }
+
+            prevHeading = targetHeading;
+
+            return true;
+
+
         }
     }
 
