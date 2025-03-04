@@ -161,7 +161,7 @@ public class NewIntake extends SubSystem {
     private boolean changedTargetSlidePos = false;
 
     private double slidePos = 0;//inches
-    private double prevSlideError = 0;
+    public double prevSlideError = 0;
 
 
     private int slideTicks = 0;

@@ -54,6 +54,7 @@ public class BlueTeleTest extends LinearOpMode {
         drivetrain = new NewDrivetrain(masterThread.getData(), outtake, intake);
         drivetrain.setDriveState(NewDrivetrain.DriveState.DRIVER_CONTROL);
 
+//        outtake.setSpecimenDropBehind(true);
 
         //its important that outtake is added after intake for update order purposes
         masterThread.addSubSystems(

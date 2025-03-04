@@ -38,8 +38,8 @@ public class AndySub extends SubSystem{
     public void loop() {
 
         mp.reset();
-        mp.addVector(new Vector2d(-gamepad1.left_stick_y, gamepad1.left_stick_x));
-        mp.addHeading(gamepad1.right_stick_x);
+        mp.addVector(new Vector2d(-gamepad1.left_stick_y, -gamepad1.left_stick_x));
+        mp.addHeading(-gamepad1.right_stick_x);
 
         setMp(mp);
     }

@@ -111,7 +111,7 @@ public class NewOuttake extends SubSystem {
         DOWN(0),
         TRANSFER(5.65),
         EXTRACT_FROM_TRANSFER(9),
-        MIN_PASSTHROUGH_HEIGHT(10),
+        MIN_PASSTHROUGH_HEIGHT(8.5),
         SPECIMEN_PICKUP(3.55),
         CLEAR_SPECIMEN_BAR(6.6),
         SPECIMEN_BAR(8),
@@ -195,7 +195,7 @@ public class NewOuttake extends SubSystem {
         LESS_DOWN(.7543),
         DOWN(.7668),
         BACK(.9323),
-        BACK_ANGLED_DOWN(.8543),
+        BACK_ANGLED_DOWN(.83),
         BACK2(.3215),
         TRANSFER(.7008), //.435
         FRONT_ANGLED_UP(.4644),
@@ -1191,6 +1191,11 @@ public class NewOuttake extends SubSystem {
             clawPosition = ClawPosition.PARTIALOPEN;
             updateClawPosition = true;
 
+            outtakeState = OuttakeState.RETRACTING_FROM_FRONT_CLOSE_CLAW;
+
+        } else {
+            targetV4BPos = V4BarPos.GRAB_BACK.pos;
+            outtakeState = OuttakeState.RETRACING_FROM_PLACE_FRONT_CLEAR_INTAKE;
         }
 
         //set to this so V4B has room to rotate, set lower after v4b is clear
@@ -1198,7 +1203,6 @@ public class NewOuttake extends SubSystem {
 
         outtakeTimer.reset();
 
-        outtakeState = OuttakeState.RETRACTING_FROM_FRONT_CLOSE_CLAW;
     }
 
     private void retractFromFront() {
