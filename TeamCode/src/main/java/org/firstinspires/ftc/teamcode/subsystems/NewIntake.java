@@ -698,7 +698,7 @@ public class NewIntake extends SubSystem {
                 }
                 break;
             case INTAKING_A_LITTLE_MORE:
-                if (intakingTimer.seconds()>.1) {
+                if (intakingTimer.seconds()>.15) {
                     leftSpinnerServoHardwareAction.setAndQueueAction(() -> {
                         leftSpinnerServo.setPower(-1);
                     });
@@ -707,7 +707,7 @@ public class NewIntake extends SubSystem {
                 }
                 break;
             case INTAKING_SPIN_OUT:
-                if (intakingTimer.seconds()>.3) {
+                if (intakingTimer.seconds()>.27) {
                     leftSpinnerServoHardwareAction.setAndQueueAction(() -> {
                         leftSpinnerServo.setPower(1);
                     });

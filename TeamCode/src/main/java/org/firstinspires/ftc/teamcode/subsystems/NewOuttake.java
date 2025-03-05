@@ -1043,7 +1043,7 @@ public class NewOuttake extends SubSystem {
                     } else
 
                      if (autoExtendSlides) {
-                        if ( specimenDropBehind && (blueAlliance == null || sampleColor != NewIntake.SampleColor.YELLOW)) {
+                        if ( specimenDropBehind && (!teleOpControls || (blueAlliance == null || sampleColor != NewIntake.SampleColor.YELLOW))) {
                             dropBehind();
                         } else {
                             extendPlaceBehind();

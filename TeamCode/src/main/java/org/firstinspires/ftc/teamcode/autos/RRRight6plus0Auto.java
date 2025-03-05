@@ -47,7 +47,7 @@ public class RRRight6plus0Auto extends LinearOpMode {
 
     double loopTime = .05;
 
-    double timeThreshold = -1;
+    double timeThreshold = 13;
 
     double targetHeading = Math.toRadians(270);
 
@@ -66,6 +66,11 @@ public class RRRight6plus0Auto extends LinearOpMode {
     private Encoder verticalSlideEncoder, horizontalSlideEncoder;
 
     private TouchSensor breakBeam;
+
+    private final ElapsedTimer totalAutoTimer = new ElapsedTimer();
+
+    private boolean skipDrop = false;
+
 
 
     @Override
@@ -102,13 +107,28 @@ public class RRRight6plus0Auto extends LinearOpMode {
 
 
 
-        Action preload = drivetrain.drive.actionBuilder(new Pose2d(-5.5, 62.1, Math.toRadians(270)))
-                .setTangent(Math.toRadians(270))
-                .afterTime(.3, () -> {
-                    intake.toIntakeState(NewIntake.ToIntakeState.RAISE_INTAKE);
-                })
-                .splineToConstantHeading(new Vector2d(-5.5, 30.5), Math.toRadians(270), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-45, 50))
-                .afterTime(0, () -> outtake.toClawPosition(NewOuttake.ClawPosition.OPEN))
+        Action preload = new Action() {
+            boolean notCanceled = true;
+
+            final Action action = drivetrain.drive.actionBuilder(new Pose2d(-5.5, 62.1, Math.toRadians(270)))
+                    .setTangent(Math.toRadians(270))
+                    .afterTime(.3, () -> {
+                        intake.toIntakeState(NewIntake.ToIntakeState.RAISE_INTAKE);
+                    })
+                    .afterTime(1.25, () -> {
+                        outtake.toClawPosition(NewOuttake.ClawPosition.OPEN);
+                        notCanceled = false;
+                    })
+                    .splineToConstantHeading(new Vector2d(-5.5, 30.5), Math.toRadians(270), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-45, 50))
+                    .build();
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                return notCanceled && action.run(telemetryPacket);
+            }
+        };
+
+        Action moveToGrabBlock1 = drivetrain.drive.actionBuilder(new Pose2d(-5.5, 30.5, Math.toRadians(270)))
                 .setTangent(Math.toRadians(90))
                 .afterDisp(20, () -> {
                     intake.setTargetSlidePos(18.5);
@@ -125,24 +145,6 @@ public class RRRight6plus0Auto extends LinearOpMode {
                 .setTangent(new com.reefsharklibrary.data.Vector2d(-35.5, 41).minus(new com.reefsharklibrary.data.Vector2d(-25.5, 40.5)).getDirection())
                 .lineToXSplineHeading(-35.5, Math.toRadians(228))
                 .build();
-
-//        Action moveToGrabBlock1 = drivetrain.drive.actionBuilder(new Pose2d(-5.5, 30.5, Math.toRadians(270)))
-//                .setTangent(Math.toRadians(90))
-//                .afterDisp(20, () -> {
-//                    intake.setTargetSlidePos(18.5);
-//                    intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE_AUTO_SHOVE_HEIGHT);
-//                })
-//                .splineToConstantHeading(new Vector2d(-10, 37), Math.toRadians(180), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-45, 60))
-//                .splineToSplineHeading(new Pose2d(-25.5, 40.5, Math.toRadians(235)), Math.toRadians(180))
-//                .turn(Math.toRadians(-75), new TurnConstraints(4 *Math.PI, -2 *Math.PI, 3 *Math.PI))//4, -2, 3
-//                .afterTime(.1, () -> {
-//                    intake.toIntakeState(NewIntake.ToIntakeState.RAISE_INTAKE);
-//                    intake.setTargetSlidePos(18.5);
-//                })
-//
-//                .setTangent(new com.reefsharklibrary.data.Vector2d(-35.5, 41).minus(new com.reefsharklibrary.data.Vector2d(-25.5, 40.5)).getDirection())
-//                .lineToXSplineHeading(-35.5, Math.toRadians(228))
-//                .build();
 
         Action moveToPlaceBlock2 = drivetrain.drive.actionBuilder(new Pose2d(-36.5, 41, Math.toRadians(231)))
                 .afterTime(0, () -> {
@@ -176,7 +178,52 @@ public class RRRight6plus0Auto extends LinearOpMode {
 
                 .build();
 
-        Action moveToGrabSpecimen3 = drivetrain.drive.actionBuilder(new Pose2d(-3.5, 29.5, Math.toRadians(270)))
+
+        Action moveToGrabSpecimen3 = drivetrain.drive.actionBuilder(new Pose2d(-4, 29.5, Math.toRadians(270)))
+                .setTangent(Math.toRadians(115))
+                .afterTime(.75, () -> {
+                    outtake.toOuttakeState(NewOuttake.ToOuttakeState.WAIT_DROP_BEHIND);
+                })
+                .splineToConstantHeading(new Vector2d(-37, 59), Math.toRadians(90), firstMoveToGrabVelConstraint, firstMoveToGrabAccelConstraint)
+                .afterTime(.1, () -> {
+                    outtake.toClawPosition(NewOuttake.ClawPosition.CLOSED);
+                })
+                .lineToY(60.3, moveToGrabVelConstraint, moveToGrabAccelConstraint)
+                .waitSeconds(.2)
+                .build();
+
+        Action moveToScoreSpecimen3 = drivetrain.drive.actionBuilder(new Pose2d(-37, 60.3, Math.toRadians(270)))
+                .setTangent(new com.reefsharklibrary.data.Vector2d(-4, 29.5).minus(new com.reefsharklibrary.data.Vector2d(-37, 60.7)).getDirection())
+                .lineToY(29.5, moveToScoreVelConstraint, moveToScoreAccelConstraint)
+                .afterTime(0, () -> {
+                    intake.toIntakeState(NewIntake.ToIntakeState.SEARCH_POSITION);
+                    extensionDistance = 3;
+                })
+                .build();
+
+        Action moveToDropSample3 = drivetrain.drive.actionBuilder(new Pose2d(-4, 33, Math.toRadians(270)))
+                .setTangent(Math.toRadians(115))
+                .afterTime(.6, () -> {
+                    if (skipDrop) {
+                        outtake.toOuttakeState(NewOuttake.ToOuttakeState.WAIT_DROP_BEHIND);
+                    }
+                })
+                .splineToConstantHeading(new Vector2d(-37, 57), Math.toRadians(90), moveToGrabVelConstraint, moveToGrabAccelConstraint)
+                .build();
+
+        Action moveToGrabSpecimen4 = drivetrain.drive.actionBuilder(new Pose2d(-37, 57, Math.toRadians(270)))
+                .lineToY(60.3)
+                .afterTime(.0, () -> {
+                    outtake.toClawPosition(NewOuttake.ClawPosition.CLOSED);
+                })
+                .build();
+
+        Action moveToScoreSpecimen4 = drivetrain.drive.actionBuilder(new Pose2d(-37, 60.3, Math.toRadians(270)))
+                .setTangent(new com.reefsharklibrary.data.Vector2d(-4, 29.5).minus(new com.reefsharklibrary.data.Vector2d(-37, 60.7)).getDirection())
+                .lineToY(29.5, moveToScoreVelConstraint, moveToScoreAccelConstraint)
+                .build();
+
+        Action moveToGrabSpecimen5 = drivetrain.drive.actionBuilder(new Pose2d(-3.5, 29.5, Math.toRadians(270)))
 //                .setTangent(Math.toRadians(90))
 //                .setTangent(new com.reefsharklibrary.data.Vector2d(-37, 61.7).minus(new com.reefsharklibrary.data.Vector2d(-3.5, 31)).getDirection())
                 .afterTime(.75, () -> {
@@ -192,52 +239,11 @@ public class RRRight6plus0Auto extends LinearOpMode {
                 .waitSeconds(.2)
                 .build();
 
-        Action moveToScoreSpecimen3 = drivetrain.drive.actionBuilder(new Pose2d(-37, 60.3, Math.toRadians(270)))
+        Action moveToScoreSpecimen5 = drivetrain.drive.actionBuilder(new Pose2d(-37, 60.3, Math.toRadians(270)))
                 .setTangent(new com.reefsharklibrary.data.Vector2d(-4, 29.5).minus(new com.reefsharklibrary.data.Vector2d(-37, 61.7)).getDirection())
                 .lineToY(29.5, moveToScoreVelConstraint, moveToScoreAccelConstraint)
 //                .setTangent(Math.toRadians(270))
 //                .splineToConstantHeading(new Vector2d(-4, 29), Math.toRadians(305), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-50, PARAMS.maxProfileAccel))
-                .build();
-
-        Action moveToGrabSpecimen4 = drivetrain.drive.actionBuilder(new Pose2d(-4, 29.5, Math.toRadians(270)))
-                .setTangent(Math.toRadians(115))
-                .afterTime(.75, () -> {
-                    outtake.toOuttakeState(NewOuttake.ToOuttakeState.WAIT_DROP_BEHIND);
-                })
-                .splineToConstantHeading(new Vector2d(-37, 59), Math.toRadians(90), firstMoveToGrabVelConstraint, firstMoveToGrabAccelConstraint)
-                .afterTime(.1, () -> {
-                    outtake.toClawPosition(NewOuttake.ClawPosition.CLOSED);
-                })
-                .lineToY(60.3, moveToGrabVelConstraint, moveToGrabAccelConstraint)
-                .waitSeconds(.2)
-                .build();
-
-        Action moveToScoreSpecimen4 = drivetrain.drive.actionBuilder(new Pose2d(-37, 60.3, Math.toRadians(270)))
-                .setTangent(new com.reefsharklibrary.data.Vector2d(-4, 29.5).minus(new com.reefsharklibrary.data.Vector2d(-37, 60.7)).getDirection())
-                .lineToY(29.5, moveToScoreVelConstraint, moveToScoreAccelConstraint)
-                .afterTime(0, () -> {
-                    intake.toIntakeState(NewIntake.ToIntakeState.SEARCH_POSITION);
-                    extensionDistance = 3;
-                })
-                .build();
-
-        Action moveToDropSample5 = drivetrain.drive.actionBuilder(new Pose2d(-4, 33, Math.toRadians(270)))
-                .setTangent(Math.toRadians(115))
-                .splineToConstantHeading(new Vector2d(-37, 57), Math.toRadians(90), moveToGrabVelConstraint, moveToGrabAccelConstraint)
-//                .lineToY(58, moveToGrabVelConstraint, moveToGrabAccelConstraint)
-//                .lineToY(60.3, moveToGrabVelConstraint, moveToGrabAccelConstraint)
-                .build();
-
-        Action moveToGrabSpecimen5 = drivetrain.drive.actionBuilder(new Pose2d(-37, 57, Math.toRadians(270)))
-                .lineToY(60.3)
-                .afterTime(.0, () -> {
-                    outtake.toClawPosition(NewOuttake.ClawPosition.CLOSED);
-                })
-                .build();
-
-        Action moveToScoreSpecimen5 = drivetrain.drive.actionBuilder(new Pose2d(-37, 60.3, Math.toRadians(270)))
-                .setTangent(new com.reefsharklibrary.data.Vector2d(-4, 29.5).minus(new com.reefsharklibrary.data.Vector2d(-37, 60.7)).getDirection())
-                .lineToY(29.5, moveToScoreVelConstraint, moveToScoreAccelConstraint)
                 .build();
 
         Action moveToGrabSpecimen6 = drivetrain.drive.actionBuilder(new Pose2d(-4, 29.5, Math.toRadians(270)))
@@ -276,9 +282,9 @@ public class RRRight6plus0Auto extends LinearOpMode {
             throw new RuntimeException("pinpoint cooked");
         }
 
-        Action intakeBlock = new IntakeBlock();
-
         waitForStart();
+
+        totalAutoTimer.reset();
 
         drivetrain.drive.setPoseEstimate(new  Pose2d(-5.5, 62.1, Math.toRadians(270)));
 
@@ -289,8 +295,7 @@ public class RRRight6plus0Auto extends LinearOpMode {
 
         drivetrain.followPath(new SequentialAction(
                 preload,
-//                new InstantAction(() -> outtake.toClawPosition(NewOuttake.ClawPosition.OPEN)),
-//                moveToGrabBlock1,
+                moveToGrabBlock1,
                 new InstantAction(() -> intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE_AUTO_SHOVE_HEIGHT)),
                 moveToPlaceBlock2,
                 new InstantAction(() -> outtake.toClawPosition(NewOuttake.ClawPosition.CLOSED)),
@@ -298,10 +303,6 @@ public class RRRight6plus0Auto extends LinearOpMode {
                 new InstantAction(() -> outtake.toClawPosition(NewOuttake.ClawPosition.OPEN)),
                 moveToGrabSpecimen3,
                 moveToScoreSpecimen3,
-                new InstantAction(() -> outtake.toClawPosition(NewOuttake.ClawPosition.OPEN)),
-                moveToGrabSpecimen4,
-//                new InstantAction(() -> outtake.toClawPosition(NewOuttake.ClawPosition.CLOSED)),
-                moveToScoreSpecimen4,
                 new InstantAction(() -> {
                     outtake.toClawPosition(NewOuttake.ClawPosition.OPEN);
                     outtake.outtakeState(NewOuttake.OuttakeState.IDLE);
@@ -313,7 +314,9 @@ public class RRRight6plus0Auto extends LinearOpMode {
                 }),
                 new SleepAction(.2),
                 new ParallelAction(
-                    new GrabFromSubmersible(),
+                    new RunToTimeThreshold(
+                        new GrabFromSubmersible()
+                    ),
                     new SequentialAction(
                         new SleepAction(.6),
                         new InstantAction(() -> {
@@ -321,14 +324,30 @@ public class RRRight6plus0Auto extends LinearOpMode {
                         })
                     )
                 ),
-                moveToDropSample5,
+                new InstantAction(
+                        () -> {
+                            drivetrain.cancelHoldPoint();
+                        }
+                ),
+                new ParallelAction(
+                    moveToDropSample3,
+                    telemetryPacket -> {
+                        if (skipDrop && intake.isBreakBeam()) {
+                            skipDrop = false;
+                        }
+                        return false;
+                    }
+                ),
                 new DropBlock(),
-                moveToGrabSpecimen5,
-                moveToScoreSpecimen5,
+                moveToGrabSpecimen4,
+                moveToScoreSpecimen4,
                 new InstantAction(() -> {
                     outtake.toClawPosition(NewOuttake.ClawPosition.OPEN);
                     outtake.setSpecimenDropBehind(false);
                 }),
+                moveToGrabSpecimen5,
+                moveToScoreSpecimen5,
+                new InstantAction(() -> outtake.toClawPosition(NewOuttake.ClawPosition.OPEN)),
                 moveToGrabSpecimen6,
                 moveToScoreSpecimen6,
                 new InstantAction(() -> {
@@ -366,11 +385,33 @@ public class RRRight6plus0Auto extends LinearOpMode {
         }
     }
 
+    public class RunToTimeThreshold implements Action {
+        Action action;
+
+        public RunToTimeThreshold(Action action) {
+            this.action = action;
+        }
+
+        @Override
+        public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+            boolean time = ((30-totalAutoTimer.seconds())>timeThreshold);
+
+            if (!time) {
+                skipDrop = true;
+                intake.toIntakeState(NewIntake.ToIntakeState.RETRACT);
+            }
+
+            return action.run(telemetryPacket) && time ;
+        }
+    }
+
     public class DropBlock implements Action {
 
         @Override
         public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-            if (outtake.getOuttakeState() == NewOuttake.OuttakeState.WAITING_DROP_SAMPLE) {// || intake.getPrevIntakingState() == NewIntake.IntakingState.INTAKING
+            if (outtake.getOuttakeState() == NewOuttake.OuttakeState.WAITING_GRAB_SPECIMEN) {
+                return false;
+            } else if (outtake.getOuttakeState() == NewOuttake.OuttakeState.WAITING_DROP_SAMPLE) {// || intake.getPrevIntakingState() == NewIntake.IntakingState.INTAKING
                 outtake.toClawPosition(NewOuttake.ClawPosition.OPEN);
                 return false;
             } else {
@@ -393,7 +434,7 @@ public class RRRight6plus0Auto extends LinearOpMode {
             }
 
             if (intake.getPrevIntakingState() == NewIntake.IntakingState.INTAKING_A_LITTLE_MORE || intake.getPrevIntakingState() == NewIntake.IntakingState.INTAKING_SPIN_OUT || intake.getPrevIntakingState() == NewIntake.IntakingState.FINISH_INTAKING) {
-                timeThreshold = -1;
+//                timeThreshold = -1;
                 drivetrain.cancelHoldPoint();
                 return false;
             }
