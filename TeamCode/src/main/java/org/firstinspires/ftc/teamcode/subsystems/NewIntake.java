@@ -137,6 +137,7 @@ public class NewIntake extends SubSystem {
 
     private ToIntakeState newToIntakeState = toIntakeState;
 
+    public boolean grabbedYellow = false;
     private boolean changedToIntakeState = false;
 
     public Boolean blueAlliance;
@@ -681,6 +682,9 @@ public class NewIntake extends SubSystem {
                         intakingState = IntakingState.START_EJECTING;
                         intakingTimer.reset();
                     } else {
+                        if (!teleOpControls && sampleColor == SampleColor.YELLOW) {
+                            grabbedYellow = true;
+                        }
                         targetIntakePos = IntakePos.UP.pos;
 
                         intakeState = IntakeState.RETRACTING_INTAKE;
@@ -753,13 +757,12 @@ public class NewIntake extends SubSystem {
                 targetIntakeSpeed = 1;
                 intakingTimer.reset();
 
-                intakingState = IntakingState.FINISH_INTAKING;
+                intakingState = IntakingState.FINISH_REINTAKING;
                 break;
             case FINISH_REINTAKING:
-                if (intakingTimer.seconds()>1.5) {
-                    targetIntakeSpeed = 0;
-
-                    intakingState = IntakingState.HOLDING_SAMPLE;
+                if (intakingTimer.seconds()>.3) {
+                    intakingState = IntakingState.FINISH_INTAKING;
+                    intakingTimer.reset();
                 }
                 break;
 
@@ -777,7 +780,7 @@ public class NewIntake extends SubSystem {
                 }
                 break;
             case UNJAMMING_SPIN_IN:
-                if (isBreakBeam || intakingTimer.seconds() > .5) {
+                if (isBreakBeam || intakingTimer.seconds() > .6) {
                     intakingTimer.reset();
                     intakingState = IntakingState.UNJAMMING_FINISH_SPIN_IN;
                 }

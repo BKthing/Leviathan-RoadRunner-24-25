@@ -117,7 +117,7 @@ public class NewOuttake extends SubSystem {
         SPECIMEN_BAR(8),
         PLACE_SPECIMEN_BAR(13.3),
         HANG_HEIGHT(21),
-        LOW_BUCKET_HEIGHT(5.65),//3
+        LOW_BUCKET_HEIGHT(5.65001),//3
         HIGH_BUCKET(19.5),
         PULL_TO_FIRST_BAR(.3),
         GRAB_FIRST_BAR(3),
@@ -175,6 +175,7 @@ public class NewOuttake extends SubSystem {
         GRAB_BACK(.63 - .042-.007),
         WAIT_PLACE_BACK(.14 - .042-.007),
         PLACE_BACK(.12 - .042-.007),//.07
+        PLACE_EXTRA_BACK(.03),
         HANG_POS(.23 - .042-.007),
         IDLE_POSITION(.41 - .042-.007),
         TOUCH_BAR(.339 - .042-.007);
@@ -193,7 +194,7 @@ public class NewOuttake extends SubSystem {
 
     public enum ClawPitch {
         LESS_DOWN(.7543),
-        DOWN(.7668),
+        DOWN(.7618),
         BACK(.9323),
         BACK_ANGLED_DOWN(.83),
         BACK2(.3215),
@@ -489,10 +490,12 @@ public class NewOuttake extends SubSystem {
                     if (cycleHigh) {
                         if (targetSlidePos == VerticalSlide.LOW_BUCKET_HEIGHT.length) {
                             targetSlidePos = VerticalSlide.HIGH_BUCKET.length;
+                            targetV4BPos = V4BarPos.PLACE_BACK.pos;
                         }
                     } else {
                         if (targetSlidePos == VerticalSlide.HIGH_BUCKET.length) {
                             targetSlidePos = VerticalSlide.LOW_BUCKET_HEIGHT.length;
+                            targetV4BPos = V4BarPos.PLACE_EXTRA_BACK.pos;
                         }
                     }
 
@@ -958,7 +961,7 @@ public class NewOuttake extends SubSystem {
             case WAITING_FOR_TRANSFER:
                 if (transfer) {
                     transfer = false;
-                    if (cycleSpecimen && (blueAlliance == null || sampleColor != NewIntake.SampleColor.YELLOW)) {
+                    if (cycleSpecimen && !specimenDropBehind && (blueAlliance == null || sampleColor != NewIntake.SampleColor.YELLOW)) {
                         outtakeState = OuttakeState.IDLE;
                     }
                     else {
@@ -1134,18 +1137,19 @@ public class NewOuttake extends SubSystem {
     private void extendPlaceBehind() {
         if (cycleHigh) {
             targetSlidePos = VerticalSlide.HIGH_BUCKET.length;
+            targetV4BPos = V4BarPos.PLACE_BACK.pos;
         } else {
             targetSlidePos = VerticalSlide.LOW_BUCKET_HEIGHT.length;
+            targetV4BPos = V4BarPos.PLACE_EXTRA_BACK.pos;
         }
 
         if (targetV4BPos > V4BarPos.MID_POSITION_CUTOFF.pos) {
-            if (clawPosition != ClawPosition.CLOSED){
+            if (clawPosition != ClawPosition.CLOSED) {
                 clawPosition = ClawPosition.PARTIALOPEN;
                 updateClawPosition = true;
             }
         }
 //        if (teleOpControls) {
-            targetV4BPos = V4BarPos.PLACE_BACK.pos;
 //        }
 //        else {
 //            targetV4BPos = V4BarPos.WAIT_PLACE_BACK.pos;

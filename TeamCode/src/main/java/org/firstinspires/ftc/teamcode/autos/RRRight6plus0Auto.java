@@ -47,7 +47,7 @@ public class RRRight6plus0Auto extends LinearOpMode {
 
     double loopTime = .05;
 
-    double timeThreshold = 13;
+    double timeThreshold = 12.5;
 
     double targetHeading = Math.toRadians(270);
 
@@ -55,6 +55,8 @@ public class RRRight6plus0Auto extends LinearOpMode {
 
     double maxGrabAngle = Math.toRadians(285);
     double minGrabAngle = Math.toRadians(255);
+
+    boolean grabbedYellow = false;
 
     VisionSubsystem vision;
 
@@ -70,6 +72,8 @@ public class RRRight6plus0Auto extends LinearOpMode {
     private final ElapsedTimer totalAutoTimer = new ElapsedTimer();
 
     private boolean skipDrop = false;
+
+    private Telemetry.Item skipDropTelem;
 
 
 
@@ -94,6 +98,8 @@ public class RRRight6plus0Auto extends LinearOpMode {
         drivetrain.setDriveState(NewDrivetrain.DriveState.FOLLOW_PATH);
 
         vision = new VisionSubsystem(drivetrain, masterThread.getData(), blueAlliance, true);
+
+        skipDropTelem = telemetry.addData("Skip Drop", skipDrop);
 
         //its important that outtake is added after intake for update order purposes
         masterThread.addSubSystems(
@@ -206,6 +212,7 @@ public class RRRight6plus0Auto extends LinearOpMode {
                 .afterTime(.6, () -> {
                     if (skipDrop) {
                         outtake.toOuttakeState(NewOuttake.ToOuttakeState.WAIT_DROP_BEHIND);
+                        intake.setIntakingState(NewIntake.IntakingState.START_EJECTING_PARTIAL_GRAB);
                     }
                 })
                 .splineToConstantHeading(new Vector2d(-37, 57), Math.toRadians(90), moveToGrabVelConstraint, moveToGrabAccelConstraint)
@@ -219,7 +226,11 @@ public class RRRight6plus0Auto extends LinearOpMode {
                 .build();
 
         Action moveToScoreSpecimen4 = drivetrain.drive.actionBuilder(new Pose2d(-37, 60.3, Math.toRadians(270)))
+                .waitSeconds(.1)
                 .setTangent(new com.reefsharklibrary.data.Vector2d(-4, 29.5).minus(new com.reefsharklibrary.data.Vector2d(-37, 60.7)).getDirection())
+                .afterTime(.2, () -> {
+                    intake.toIntakeState(NewIntake.ToIntakeState.RETRACT_AND_STOP_INTAKING);
+                })
                 .lineToY(29.5, moveToScoreVelConstraint, moveToScoreAccelConstraint)
                 .build();
 
@@ -266,14 +277,14 @@ public class RRRight6plus0Auto extends LinearOpMode {
                     outtake.toOuttakeState(NewOuttake.ToOuttakeState.RETRACT_FROM_PLACE_BEHIND);
                 })
                 .afterTime(1.2, () -> {
-                    intake.setTargetSlidePos(18);
-                    extensionDistance = 18;
+                    intake.setTargetSlidePos(15);
+                    extensionDistance = 15;
                     intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
-//                    intake.setIntakingState(NewIntake.IntakingState.START_INTAKING);
+                    intake.setIntakingState(NewIntake.IntakingState.START_INTAKING);
                     autoTimer.reset();
+                    outtake.outtakeState(NewOuttake.OuttakeState.IDLE);
                 })
-                .splineToLinearHeading(new Pose2d(-11.5, 56.5, Math.toRadians(175)), Math.toRadians(90), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-55, 80))
-                .build();
+                .splineToLinearHeading(new Pose2d(-11.5, 56.5, Math.toRadians(175)), Math.toRadians(90)).build();
 
         drivetrain.drive.setPoseEstimate(new Pose2d(1, 1, 0));
         drivetrain.drive.pinpoint.update();
@@ -314,15 +325,15 @@ public class RRRight6plus0Auto extends LinearOpMode {
                 }),
                 new SleepAction(.2),
                 new ParallelAction(
-                    new RunToTimeThreshold(
-                        new GrabFromSubmersible()
-                    ),
-                    new SequentialAction(
-                        new SleepAction(.6),
-                        new InstantAction(() -> {
-                            outtake.toOuttakeState(NewOuttake.ToOuttakeState.RETRACT_FROM_PLACE_BEHIND);
-                        })
-                    )
+                        new RunToTimeThreshold(
+                                new GrabFromSubmersible()
+                        ),
+                        new SequentialAction(
+                                new SleepAction(.6),
+                                new InstantAction(() -> {
+                                    outtake.toOuttakeState(NewOuttake.ToOuttakeState.RETRACT_FROM_PLACE_BEHIND);
+                                })
+                        )
                 ),
                 new InstantAction(
                         () -> {
@@ -330,13 +341,18 @@ public class RRRight6plus0Auto extends LinearOpMode {
                         }
                 ),
                 new ParallelAction(
-                    moveToDropSample3,
-                    telemetryPacket -> {
-                        if (skipDrop && intake.isBreakBeam()) {
-                            skipDrop = false;
+                        moveToDropSample3,
+                        new Action() {
+                            @Override
+                            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                                if (skipDrop && intake.isBreakBeam()) {
+                                    skipDrop = false;
+//                                    throw new RuntimeException("its running");
+                                }
+
+                                return false;
+                            }
                         }
-                        return false;
-                    }
                 ),
                 new DropBlock(),
                 moveToGrabSpecimen4,
@@ -348,18 +364,32 @@ public class RRRight6plus0Auto extends LinearOpMode {
                 moveToGrabSpecimen5,
                 moveToScoreSpecimen5,
                 new InstantAction(() -> outtake.toClawPosition(NewOuttake.ClawPosition.OPEN)),
-                moveToGrabSpecimen6,
-                moveToScoreSpecimen6,
+                new Action() {
+                    final Action action = new SequentialAction(
+                            moveToGrabSpecimen6,
+                            moveToScoreSpecimen6);
+                    @Override
+                    public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                        if (!intake.grabbedYellow && !skipDrop) {
+                            return action.run(telemetryPacket);
+                        } else {
+                            return false;
+                        }
+                    }
+                },
                 new InstantAction(() -> {
                     outtake.toClawPosition(NewOuttake.ClawPosition.OPEN);
                     outtake.outtakeState(NewOuttake.OuttakeState.IDLE);
                 }),
-                park
-                ));
+                park,
+                new IntakeBlock()
+        ));
 
         while ( !isStopRequested()) {
 
             masterThread.unThreadedUpdate();
+
+            skipDropTelem.setValue(skipDrop);
 
             loopTimeTelem.setValue(loopTimer.milliSeconds());
 
@@ -373,9 +403,8 @@ public class RRRight6plus0Auto extends LinearOpMode {
         @Override
         public boolean run(@NonNull TelemetryPacket telemetryPacket) {
             if (intake.getPrevIntakingState() != NewIntake.IntakingState.INTAKING && intake.getPrevIntakingState() != NewIntake.IntakingState.START_INTAKING && intake.getPrevIntakingState() != NewIntake.IntakingState.SERVO_STALL_START_UNJAMMING && intake.getPrevIntakingState() != NewIntake.IntakingState.SERVO_STALL_UNJAMMING_SPIN_OUT) {
-                return false;
-            } else if (autoTimer.seconds()>2) {
-                intake.toIntakeState(NewIntake.ToIntakeState.RETRACT);
+                intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
+                intake.setTargetSlidePos(18.5);
                 return false;
             } else {
                 extensionDistance = MathUtil.clip(extensionDistance + 20 * loopTime, -.5, 18.5);
