@@ -494,7 +494,7 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
             switch (grabFromSubmersibleState) {
                 case SEARCHING:
                     if (vision.hasSample()) {
-                        targetHeading = MathUtil.clip(Rotation.inRange(prevHeading+Rotation.inRange((vision.getTargetRobotPose().getHeading()-prevHeading), Math.PI, -Math.PI)*.3, 2*Math.PI, 0), minGrabAngle, maxGrabAngle);
+                        targetHeading = MathUtil.clip(Rotation.inRange(prevHeading+Rotation.inRange((vision.getTargetRobotPose().getHeading()-prevHeading), Math.PI, -Math.PI)*1, 2*Math.PI, 0), minGrabAngle, maxGrabAngle);
 
                         drivetrain.holdPoint(holdPoint.toPose(targetHeading));
 
@@ -513,7 +513,7 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
                     }
                     break;
                 case APPROACHING_HEADING:
-                    targetHeading = MathUtil.clip(Rotation.inRange(prevHeading+Rotation.inRange((vision.getTargetRobotPose().getHeading()-prevHeading), Math.PI, -Math.PI)*.15, 2*Math.PI, 0), minGrabAngle, maxGrabAngle);
+                    targetHeading = MathUtil.clip(Rotation.inRange(prevHeading+Rotation.inRange((vision.getTargetRobotPose().getHeading()-prevHeading), Math.PI, -Math.PI)*.25, 2*Math.PI, 0), minGrabAngle, maxGrabAngle);
 
                     if (Math.abs(drivetrain.getHoldPointError().minimizeHeading(Math.PI, -Math.PI).getHeading())<Math.toRadians(5)) {
                         grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.APPROACHING;
@@ -546,7 +546,7 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
                 case INTAKING_1:
 //hello brett king
                     if (autoTimer.seconds()>.5) {
-                        grabFromSubmersibleState = GrabFromSubmersibleState.RETRACTING;
+                        grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.RETRACTING;
                     } else {
                         targetHeading = MathUtil.clip(Rotation.inRange(prevHeading + Rotation.inRange((vision.getTargetRobotPose().getHeading() - prevHeading), Math.PI, -Math.PI) * .15, 2 * Math.PI, 0), minGrabAngle, maxGrabAngle);
 
@@ -560,7 +560,7 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
                 case RETRACTING:
 
                     if (autoTimer.seconds()>.5+.4 || extensionDistance == 2) {
-                        grabFromSubmersibleState = GrabFromSubmersibleState.INTAKING_2;
+                        grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.INTAKING_2;
                     } else {
                         targetHeading = MathUtil.clip(Rotation.inRange(prevHeading + Rotation.inRange((vision.getTargetRobotPose().getHeading() - prevHeading), Math.PI, -Math.PI) * .15, 2 * Math.PI, 0), minGrabAngle, maxGrabAngle);
 
@@ -615,6 +615,7 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
                         extensionDistance = 1;
                         autoTimer.reset();
                     }
+
                     break;
             }
 

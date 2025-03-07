@@ -34,7 +34,7 @@ import org.firstinspires.ftc.teamcode.util.threading.MasterThread;
 import java.util.Arrays;
 
 @Autonomous
-public class RRRight6plus0Auto extends LinearOpMode {
+public class BlueRRRight6plus0Auto extends LinearOpMode {
     NewDrivetrain drivetrain;
     NewIntake intake;
     NewOuttake outtake;
@@ -463,7 +463,7 @@ public class RRRight6plus0Auto extends LinearOpMode {
             }
 
             if (intake.getPrevIntakingState() == NewIntake.IntakingState.INTAKING_A_LITTLE_MORE || intake.getPrevIntakingState() == NewIntake.IntakingState.INTAKING_SPIN_OUT || intake.getPrevIntakingState() == NewIntake.IntakingState.FINISH_INTAKING) {
-//                timeThreshold = -1;
+                timeThreshold = -1;
                 drivetrain.cancelHoldPoint();
                 return false;
             }
@@ -471,7 +471,7 @@ public class RRRight6plus0Auto extends LinearOpMode {
             switch (grabFromSubmersibleState) {
                 case SEARCHING:
                     if (vision.hasSample()) {
-                        targetHeading = MathUtil.clip(Rotation.inRange(prevHeading+Rotation.inRange((vision.getTargetRobotPose().getHeading()-prevHeading), Math.PI, -Math.PI)*.3, 2*Math.PI, 0), minGrabAngle, maxGrabAngle);
+                        targetHeading = MathUtil.clip(Rotation.inRange(prevHeading+Rotation.inRange((vision.getTargetRobotPose().getHeading()-prevHeading), Math.PI, -Math.PI)*1, 2*Math.PI, 0), minGrabAngle, maxGrabAngle);
 
                         drivetrain.holdPoint(holdPoint.toPose(targetHeading));
 
@@ -480,7 +480,7 @@ public class RRRight6plus0Auto extends LinearOpMode {
                     } else if (autoTimer.seconds()>.5) {
                         if (!searching) {
                             drivetrain.cancelHoldPoint();
-                            searchTurn = drivetrain.drive.actionBuilder(MathUtil.toRoadRunnerPose(holdPoint.toPose(Math.toRadians(270))))
+                            searchTurn = drivetrain.drive.actionBuilder(MathUtil.toRoadRunnerPose(holdPoint.toPose(Math.toRadians(180))))
                                     .turnTo(maxGrabAngle, new TurnConstraints(.1 *Math.PI, -2 *Math.PI, 2 *Math.PI))
                                     .turnTo(minGrabAngle, new TurnConstraints(.1 *Math.PI, -2 *Math.PI, 2 *Math.PI))
                                     .build();
@@ -490,12 +490,12 @@ public class RRRight6plus0Auto extends LinearOpMode {
                     }
                     break;
                 case APPROACHING_HEADING:
-                    targetHeading = MathUtil.clip(Rotation.inRange(prevHeading+Rotation.inRange((vision.getTargetRobotPose().getHeading()-prevHeading), Math.PI, -Math.PI)*.15, 2*Math.PI, 0), minGrabAngle, maxGrabAngle);
+                    targetHeading = MathUtil.clip(Rotation.inRange(prevHeading+Rotation.inRange((vision.getTargetRobotPose().getHeading()-prevHeading), Math.PI, -Math.PI)*.25, 2*Math.PI, 0), minGrabAngle, maxGrabAngle);
 
                     if (Math.abs(drivetrain.getHoldPointError().minimizeHeading(Math.PI, -Math.PI).getHeading())<Math.toRadians(5)) {
                         grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.APPROACHING;
 
-                        extensionDistance = Math.max(vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset() - intake.getActualSlidePos() - 5.3, 5);//Math.max(extensionDistance+(vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset() - 4)*.125, 3);
+                        extensionDistance = Math.max(vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset() - intake.getActualSlidePos() - 5.3, 2.5);//Math.max(extensionDistance+(vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset() - 4)*.125, 3);
                         intake.setTargetSlidePos(extensionDistance);
                     }
                     break;
@@ -513,7 +513,7 @@ public class RRRight6plus0Auto extends LinearOpMode {
                     drivetrain.holdPoint(holdPoint.toPose(targetHeading));//, maxGrabAngle
 
 
-                    if (drivetrain.getHoldPointError().minimizeHeading(Math.PI, -Math.PI).inRange(new com.reefsharklibrary.data.Pose2d(1, 1, Math.toRadians(3.5))) && intake.prevSlideError <1) {
+                    if (drivetrain.getHoldPointError().minimizeHeading(Math.PI, -Math.PI).inRange(new com.reefsharklibrary.data.Pose2d(1, 1, Math.toRadians(3.5)))) {
                         intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
                         intake.setIntakingState(NewIntake.IntakingState.START_INTAKING);
                         grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.INTAKING_1;
@@ -543,7 +543,7 @@ public class RRRight6plus0Auto extends LinearOpMode {
 
                         drivetrain.holdPoint(holdPoint.toPose(targetHeading));
 
-                        extensionDistance = MathUtil.clip(extensionDistance - 12 * loopTime, 5, 18.5);
+                        extensionDistance = MathUtil.clip(extensionDistance - 12 * loopTime, 2, 18.5);
                         intake.setTargetSlidePos(extensionDistance);
 
                     }
@@ -558,15 +558,15 @@ public class RRRight6plus0Auto extends LinearOpMode {
                         intake.toIntakeState(NewIntake.ToIntakeState.SEARCH_POSITION);
                         double curHeading = drivetrain.getPoseEstimate().getHeading();
 
-                        if (curHeading > Math.toRadians(273)) {
-                            targetHeading = Math.toRadians(267);
-                            drivetrain.holdPoint(holdPoint.toPose(Math.toRadians(265)));
-                        } else if (curHeading < Math.toRadians(267)) {
-                            targetHeading = Math.toRadians(273);
-                            drivetrain.holdPoint(holdPoint.toPose(Math.toRadians(275)));
+                        if (curHeading > Math.toRadians(183)) {
+                            targetHeading = Math.toRadians(176);
+                            drivetrain.holdPoint(holdPoint.toPose(Math.toRadians(176)));
+                        } else if (curHeading < Math.toRadians(177)) {
+                            targetHeading = Math.toRadians(183);
+                            drivetrain.holdPoint(holdPoint.toPose(Math.toRadians(185)));
                         } else {
-                            targetHeading = Math.toRadians(265);
-                            drivetrain.holdPoint(holdPoint.toPose(Math.toRadians(265)));
+                            targetHeading = Math.toRadians(175);
+                            drivetrain.holdPoint(holdPoint.toPose(Math.toRadians(175)));
                         }
 
                         grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.RESETTING;
@@ -581,7 +581,7 @@ public class RRRight6plus0Auto extends LinearOpMode {
 
                         intake.toIntakeState(NewIntake.ToIntakeState.SEARCH_POSITION);
                         extensionDistance = 1;
-                        drivetrain.holdPoint(holdPoint.toPose(Math.toRadians(270)));
+                        drivetrain.holdPoint(holdPoint.toPose(Math.toRadians(180)));
 
                         grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.RESETTING;
                     }
@@ -592,6 +592,7 @@ public class RRRight6plus0Auto extends LinearOpMode {
                         extensionDistance = 1;
                         autoTimer.reset();
                     }
+
                     break;
             }
 
