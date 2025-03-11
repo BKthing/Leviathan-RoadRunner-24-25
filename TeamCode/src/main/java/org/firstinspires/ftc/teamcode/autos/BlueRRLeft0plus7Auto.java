@@ -6,7 +6,9 @@ import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.InstantAction;
 import com.acmerobotics.roadrunner.MinVelConstraint;
+import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.ProfileAccelConstraint;
 import com.acmerobotics.roadrunner.SequentialAction;
@@ -115,19 +117,21 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
                 .afterTime(.3, () -> {
                     intake.toIntakeState(NewIntake.ToIntakeState.RAISE_INTAKE);
                 })
-                .afterTime(.8, () -> {//0
+                .afterTime(.5, () -> {//0
                     intake.setTargetSlidePos(13);
                     extensionDistance = 13;
+                    intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
+
                 })
                 .splineToLinearHeading(new Pose2d(62, 55, Math.toRadians(250)), Math.toRadians(0))
                 .build();
+
 
         Action moveToGrabBlock1 = drivetrain.drive.actionBuilder(new Pose2d(62, 55, Math.toRadians(250)))
                 .setTangent(Math.toRadians(250))
                 .afterTime(0, () -> {
 //                    intake.setTargetSlidePos(9);
 //                    extensionDistance = 9;
-                    intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
                     intake.setIntakingState(NewIntake.IntakingState.START_INTAKING);
                     autoTimer.reset();
                 })
@@ -142,10 +146,6 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
 
         Action moveToGrabBlock2 = drivetrain.drive.actionBuilder(new Pose2d(62, 53.5, Math.toRadians(265)))
                 .afterTime(0, () -> {
-                    intake.setTargetSlidePos(10);
-                    extensionDistance = 10;
-                    intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
-                    intake.setIntakingState(NewIntake.IntakingState.START_INTAKING);
                     autoTimer.reset();
                 })
                 .waitSeconds(.1)
@@ -296,9 +296,9 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
                                     .afterTime(.2, () -> {
                                         outtake.toOuttakeState(NewOuttake.ToOuttakeState.TOUCH_BAR);
                                     })
-                                    .splineToLinearHeading(new Pose2d(20, 8, Math.toRadians(180)), Math.toRadians(180), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(80))), new ProfileAccelConstraint(-27, 80))
+                                    .splineToLinearHeading(new Pose2d(19, 8, Math.toRadians(180)), Math.toRadians(180), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(80))), new ProfileAccelConstraint(-27, 80))
                                     .afterTime(0, () -> {
-                                        drivetrain.holdPoint(new com.reefsharklibrary.data.Pose2d(20, 8, Math.toRadians(180)));
+                                        drivetrain.holdPoint(new com.reefsharklibrary.data.Pose2d(19, 8, Math.toRadians(180)));
                                     })
                                     .build();
                         } else {
@@ -316,21 +316,21 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
                                             outtake.toOuttakeState(NewOuttake.ToOuttakeState.TOUCH_BAR);
                                         })
                                         .setTangent(Math.toRadians(180))
-                                        .lineToX(20)
+                                        .lineToX(19)
                                         .afterTime(0, () -> {
-                                            drivetrain.holdPoint(new com.reefsharklibrary.data.Pose2d(20, 8, Math.toRadians(180)));
+                                            drivetrain.holdPoint(new com.reefsharklibrary.data.Pose2d(19, 8, Math.toRadians(180)));
                                         })
                                         .build();
                             } else {
                                 outtake.toOuttakeState(NewOuttake.ToOuttakeState.TOUCH_BAR);
 
-                                double tangent = new com.reefsharklibrary.data.Vector2d(20, 8).minus(drivetrain.getPoseEstimate().getVector2d()).getDirection();
+                                double tangent = new com.reefsharklibrary.data.Vector2d(19, 8).minus(drivetrain.getPoseEstimate().getVector2d()).getDirection();
 
                                 path = drivetrain.drive.actionBuilder(MathUtil.toRoadRunnerPose(drivetrain.getPoseEstimate()))
                                         .setTangent(tangent)
-                                        .lineToXLinearHeading(20, Math.toRadians(180))
+                                        .lineToXLinearHeading(19, Math.toRadians(180))
                                         .afterTime(0, () -> {
-                                            drivetrain.holdPoint(new com.reefsharklibrary.data.Pose2d(20, 8, Math.toRadians(180)));
+                                            drivetrain.holdPoint(new com.reefsharklibrary.data.Pose2d(19, 8, Math.toRadians(180)));
                                         })
                                         .build();
                             }
@@ -369,11 +369,23 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
                                 new ScoreBlock(),
                                 moveToGrabBlock1,
                                 intakeBlock,
-                                moveToScoreBlock1,
+                                new InstantAction(() -> {
+                                    extensionDistance = 9;
+                                }),
+                                new ParallelAction(
+                                    moveToScoreBlock1,
+                                    new ExtendWhenTransfer()
+                                ),
                                 new ScoreBlock(),
                                 moveToGrabBlock2,
                                 intakeBlock,
-                                moveToScoreBlock2,
+                                new InstantAction(()-> {
+                                    extensionDistance = 10;
+                                }),
+                                new ParallelAction(
+                                    moveToScoreBlock2,
+                                    new ExtendWhenTransfer()
+                                ),
                                 new ScoreBlock(),
                                 moveToGrabBlock3,
                                 intakeBlock,
@@ -472,6 +484,20 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
         }
     }
 
+    public class ExtendWhenTransfer implements Action {
+        boolean notExtended = true;
+        @Override
+        public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+            if(notExtended && (outtake.getOuttakeState() == NewOuttake.OuttakeState.EXTENDING_PLACE_BEHIND || outtake.getOuttakeState() == NewOuttake.OuttakeState.EXTENDING_V4BAR_PLACE_BEHIND || outtake.getOuttakeState() == NewOuttake.OuttakeState.WAITING_PLACE_BEHIND)) {
+                notExtended = false;
+                intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
+                intake.setTargetSlidePos(extensionDistance);
+                return false;
+            }
+            return true;
+        }
+    }
+
     public class GrabFromSubmersible implements Action {
         BlueRRLeft0plus7Auto.GrabFromSubmersibleState grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.SEARCHING;
 
@@ -518,7 +544,7 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
                     if (Math.abs(drivetrain.getHoldPointError().minimizeHeading(Math.PI, -Math.PI).getHeading())<Math.toRadians(5)) {
                         grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.APPROACHING;
 
-                        extensionDistance = Math.max(vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset() - intake.getActualSlidePos() - 5.3, 2.5);//Math.max(extensionDistance+(vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset() - 4)*.125, 3);
+                        extensionDistance = Math.max(vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset() - intake.getActualSlidePos() - 5.3, 3);//Math.max(extensionDistance+(vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset() - 4)*.125, 3);
                         intake.setTargetSlidePos(extensionDistance);
                     }
                     break;
@@ -552,7 +578,7 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
 
                         drivetrain.holdPoint(holdPoint.toPose(targetHeading));
 
-                        extensionDistance = MathUtil.clip(extensionDistance + 12 * loopTime, -.5, 18.5);
+                        extensionDistance = MathUtil.clip(extensionDistance + 12 * loopTime, 3, 18.5);
                         intake.setTargetSlidePos(extensionDistance);
 
                     }
@@ -566,7 +592,7 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
 
                         drivetrain.holdPoint(holdPoint.toPose(targetHeading));
 
-                        extensionDistance = MathUtil.clip(extensionDistance - 12 * loopTime, 2, 18.5);
+                        extensionDistance = MathUtil.clip(extensionDistance - 12 * loopTime, 3, 18.5);
                         intake.setTargetSlidePos(extensionDistance);
 
                     }
@@ -594,7 +620,7 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
 
                         grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.RESETTING;
                     } else {
-                        extensionDistance = MathUtil.clip(extensionDistance + 12 * loopTime, -.5, 18.5);
+                        extensionDistance = MathUtil.clip(extensionDistance + 12 * loopTime, 3, 18.5);
                         intake.setTargetSlidePos(extensionDistance);
                     }
 

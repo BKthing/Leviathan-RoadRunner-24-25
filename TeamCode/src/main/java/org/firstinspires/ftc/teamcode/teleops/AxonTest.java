@@ -72,12 +72,12 @@ public class AxonTest extends LinearOpMode {
         loopTime = telemetry.addData("Loop Time", "");
 
 
-        leftIntakeServo = hardwareMap.get(Servo.class, "leftIntakeServo");
-        rightIntakeServo = hardwareMap.get(Servo.class, "rightIntakeServo");
+//        leftIntakeServo = hardwareMap.get(Servo.class, "leftIntakeServo");
+//        rightIntakeServo = hardwareMap.get(Servo.class, "rightIntakeServo");
 
 
 
-        leftIntakeServo.setDirection(Servo.Direction.REVERSE);
+//        leftIntakeServo.setDirection(Servo.Direction.REVERSE);
 
 
 
@@ -93,8 +93,14 @@ public class AxonTest extends LinearOpMode {
 
         breakBeamTelem = telemetry.addData("Block", true);
 
-        leftOuttake = hardwareMap.get(Servo.class, "leftOuttakeServo");
-        rightOuttake = hardwareMap.get(Servo.class, "rightOuttakeServo");
+//        leftOuttake = hardwareMap.get(Servo.class, "leftOuttakeServo");
+//        rightOuttake = hardwareMap.get(Servo.class, "rightOuttakeServo");
+
+
+        leftOuttake = hardwareMap.get(Servo.class, "leftIntakeServo");
+        rightOuttake = hardwareMap.get(Servo.class, "rightIntakeServo");
+
+
 
         clawServo = hardwareMap.get(Servo.class, "clawServo"); // ex hub 4
 
@@ -109,9 +115,9 @@ public class AxonTest extends LinearOpMode {
 //        clawWristPitch.scaleRange(.34, .965);
 
 
-        double targetPos = 0;
+        double targetPos = 0.4;
 
-        double targetPitchPos = 0.1;
+        double targetPitchPos = 0.7;
 //
 //        double clawRollPos = .3;
 
@@ -209,7 +215,7 @@ public class AxonTest extends LinearOpMode {
 
                targetPos = MathUtil.clip(targetPos + gamepad2.left_stick_y * .001 * timer.milliSeconds(), 0, 1);
 
-               leftOuttake.setPosition( targetPos);
+               leftOuttake.setPosition( targetPos+.03);
                rightOuttake.setPosition(targetPos);
            }
 

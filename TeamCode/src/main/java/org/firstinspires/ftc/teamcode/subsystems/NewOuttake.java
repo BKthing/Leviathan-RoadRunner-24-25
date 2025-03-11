@@ -232,7 +232,7 @@ public class NewOuttake extends SubSystem {
         HANG_DEPLOY(.247),//.26
         OPEN(.2),//.22
         PARTIALOPEN(.115),//.12
-        CLOSED(.045);//.045
+        CLOSED(.044);//.045
 
 //        EXTRA_OPEN(.6),
 //        OPEN(.4),
@@ -1180,7 +1180,7 @@ public class NewOuttake extends SubSystem {
             targetSlidePos = VerticalSlide.PLACE_SPECIMEN_BAR.length;
             targetV4BPos = V4BarPos.PLACE_FRONT.pos;
 
-            targetClawPitch = ClawPitch.DOWN.pos;
+            
 
             outtakeState = OuttakeState.EXTENDING_PLACE_FRONT;
         }

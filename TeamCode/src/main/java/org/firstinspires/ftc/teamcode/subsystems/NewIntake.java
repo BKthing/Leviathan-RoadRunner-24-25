@@ -176,12 +176,19 @@ public class NewIntake extends SubSystem {
     private final DoubleSupplier getVoltage;
 
     public enum IntakePos {
-        UP(.75),//.69
-        AUTO_HEIGHT(.55),//.1),
-        AUTO_SHOVE_HEIGHT(.39),
-        PARTIAL_UP(.5),//.11),
-        SEARCH(.53),
-        DOWN(.42);//.16);//.05
+        UP(.65),//.69
+        AUTO_HEIGHT(.2844),//.1),
+        AUTO_SHOVE_HEIGHT(.1053),
+        PARTIAL_UP(.247),//.11),
+        SEARCH(.2844),
+        DOWN(.1053);//.16);//.05
+
+        //UP(.75),//.69
+        //        AUTO_HEIGHT(.55),//.1),
+        //        AUTO_SHOVE_HEIGHT(.39),
+        //        PARTIAL_UP(.5),//.11),
+        //        SEARCH(.53),
+        //        DOWN(.42);//.16);//.05
 
         public final double pos;
         IntakePos(double pos) {this.pos = pos;}
@@ -286,11 +293,11 @@ public class NewIntake extends SubSystem {
         rightIntakeServo = hardwareMap.get(Servo.class, "rightIntakeServo");
 
 
-        leftIntakeServo.setDirection(Servo.Direction.REVERSE);
+        rightIntakeServo.setDirection(Servo.Direction.REVERSE);
 
 
         if (init) {
-            leftIntakeServo.setPosition(targetIntakePos);
+            leftIntakeServo.setPosition(targetIntakePos+.03);
             rightIntakeServo.setPosition(targetIntakePos);
         }
 
@@ -416,6 +423,7 @@ public class NewIntake extends SubSystem {
         intakeLoopTimer.reset();
 
         if (teleOpControls) {
+
             if (gamepad2.back) {
                 if (gamepad2.dpad_down) {
                     horizontalLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -588,7 +596,7 @@ public class NewIntake extends SubSystem {
             p = Math.signum(error);
         } else {//if (error<4 but error>.1)
             p = error*.28;//.35;
-            d = ((prevSlideError-error) / elapsedTime) * .011;//.03;//.007
+            d = ((prevSlideError-error) / elapsedTime) * .012;//.03;//.007
             f=Math.signum(error)*0.07;//.15;
         }
 
@@ -611,7 +619,7 @@ public class NewIntake extends SubSystem {
 
         if (targetIntakePos != actualIntakePos) {
             leftIntakeServoHardwareAction.setAndQueueAction(() -> leftIntakeServo.setPosition(targetIntakePos+.03));
-            rightIntakeServoHardwareAction.setAndQueueAction(() -> rightIntakeServo.setPosition(targetIntakePos + .01));
+            rightIntakeServoHardwareAction.setAndQueueAction(() -> rightIntakeServo.setPosition(targetIntakePos));
 
             actualIntakePos = targetIntakePos;
         }
@@ -1082,10 +1090,10 @@ public class NewIntake extends SubSystem {
 
     public double getIntakeHorizontalOffset() {
         if (getActualIntakePos() == NewIntake.IntakePos.UP.pos) {
-            return -.5;
+            return -.25;
         } else if (getActualIntakePos() == NewIntake.IntakePos.SEARCH.pos) {
             //TODO: measure these vals
-            return  2.5;
+            return  3.4;
         } else {// if (intake.getActualIntakePos() == NewIntake.IntakePos.DOWN.pos) {
             return 2.375;
         }
@@ -1093,11 +1101,11 @@ public class NewIntake extends SubSystem {
 
     public double getIntakeVerticalOffset() {
         if (getActualIntakePos() == NewIntake.IntakePos.UP.pos) {
-            return 8.5;
+            return 8.3125;
         } else if (getActualIntakePos() == NewIntake.IntakePos.SEARCH.pos) {
-            return 7.875;
+            return 6.5;
         } else {
-            return 4.125;
+            return 4.75;
         }
     }
 
