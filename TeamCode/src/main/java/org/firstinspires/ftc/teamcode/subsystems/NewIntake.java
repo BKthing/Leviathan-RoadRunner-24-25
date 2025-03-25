@@ -77,6 +77,7 @@ public class NewIntake extends SubSystem {
         START_UNJAMMING,
         UNJAMMING_SPIN_OUT,
         UNJAMMING_SPIN_IN,
+        UNJAMING_SPIN_IN_MORE,
         UNJAMMING_FINISH_SPIN_IN,
 
         SERVO_STALL_START_UNJAMMING,
@@ -176,19 +177,19 @@ public class NewIntake extends SubSystem {
     private final DoubleSupplier getVoltage;
 
     public enum IntakePos {
-        UP(.65),//.69
-        AUTO_HEIGHT(.2844),//.1),
-        AUTO_SHOVE_HEIGHT(.1053),
-        PARTIAL_UP(.247),//.11),
-        SEARCH(.2844),
-        DOWN(.1053);//.16);//.05
+//        UP(.65),//.69
+//        AUTO_HEIGHT(.2844),//.1),
+//        AUTO_SHOVE_HEIGHT(.1053),
+//        PARTIAL_UP(.247),//.11),
+//        SEARCH(.2844),
+//        DOWN(.1053);//.16);//.05
 
-        //UP(.75),//.69
-        //        AUTO_HEIGHT(.55),//.1),
-        //        AUTO_SHOVE_HEIGHT(.39),
-        //        PARTIAL_UP(.5),//.11),
-        //        SEARCH(.53),
-        //        DOWN(.42);//.16);//.05
+        UP(.75),//.69
+        AUTO_HEIGHT(.55),//.1),
+        AUTO_SHOVE_HEIGHT(.39),
+        PARTIAL_UP(.5),//.11),
+        SEARCH(.53),
+        DOWN(.42);//.16);//.05
 
         public final double pos;
         IntakePos(double pos) {this.pos = pos;}
@@ -293,7 +294,7 @@ public class NewIntake extends SubSystem {
         rightIntakeServo = hardwareMap.get(Servo.class, "rightIntakeServo");
 
 
-        rightIntakeServo.setDirection(Servo.Direction.REVERSE);
+        leftIntakeServo.setDirection(Servo.Direction.REVERSE);
 
 
         if (init) {
@@ -450,6 +451,10 @@ public class NewIntake extends SubSystem {
                 }
 
             } else {
+                if (gamepad1.left_bumper) {
+                    targetIntakePos = IntakePos.SEARCH.pos;
+                }
+
                 if (gamepad2.dpad_down && !oldGamePad2.dpad_down) {
                     toIntakeState = ToIntakeState.RETRACT;
                     if (intakingState != IntakingState.FINISH_INTAKING) {
@@ -492,7 +497,7 @@ public class NewIntake extends SubSystem {
                     }
                 }
             }
-
+// mmmhhmmm
         }
 
         switch (toIntakeState) {
@@ -619,7 +624,7 @@ public class NewIntake extends SubSystem {
 
         if (targetIntakePos != actualIntakePos) {
             leftIntakeServoHardwareAction.setAndQueueAction(() -> leftIntakeServo.setPosition(targetIntakePos+.03));
-            rightIntakeServoHardwareAction.setAndQueueAction(() -> rightIntakeServo.setPosition(targetIntakePos));
+            rightIntakeServoHardwareAction.setAndQueueAction(() -> rightIntakeServo.setPosition(targetIntakePos + .01));
 
             actualIntakePos = targetIntakePos;
         }
@@ -781,14 +786,20 @@ public class NewIntake extends SubSystem {
                 intakingState = IntakingState.UNJAMMING_SPIN_OUT;
                 break;
             case UNJAMMING_SPIN_OUT:
-                if (intakingTimer.seconds()>.1) {
+                if (intakingTimer.seconds()>.08) {
                     targetIntakeSpeed = 1;
                     intakingState = IntakingState.UNJAMMING_SPIN_IN;
                     intakingTimer.reset();
                 }
                 break;
             case UNJAMMING_SPIN_IN:
-                if (isBreakBeam || intakingTimer.seconds() > .6) {
+                if (isBreakBeam || intakingTimer.seconds() > .4) {
+                    intakingTimer.reset();
+                    intakingState = IntakingState.UNJAMING_SPIN_IN_MORE;
+                }
+                break;
+            case UNJAMING_SPIN_IN_MORE:
+                if (intakingTimer.seconds()>.5) {
                     intakingTimer.reset();
                     intakingState = IntakingState.UNJAMMING_FINISH_SPIN_IN;
                 }
@@ -864,7 +875,7 @@ public class NewIntake extends SubSystem {
             case EXTENDING:
                 //if slides past bar or need to be dropped
                 //add more logic
-                if (slidePos>2) {
+                if (error<1) {
                     targetIntakePos = IntakePos.DOWN.pos;
 //                    intakeState = IntakeState.INTAKING;
                     intakeTimer.reset();

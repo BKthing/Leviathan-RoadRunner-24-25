@@ -109,10 +109,10 @@ public class NewOuttake extends SubSystem {
     public enum VerticalSlide {
         EXTRA_DOWN(-.3),
         DOWN(0),
-        TRANSFER(5.65),
+        TRANSFER(5.62),
         EXTRACT_FROM_TRANSFER(9),
         MIN_PASSTHROUGH_HEIGHT(8.5),
-        SPECIMEN_PICKUP(3.55),
+        SPECIMEN_PICKUP(4.05),
         CLEAR_SPECIMEN_BAR(6.6),
         SPECIMEN_BAR(8),
         PLACE_SPECIMEN_BAR(13.3),
@@ -171,14 +171,14 @@ public class NewOuttake extends SubSystem {
         WAITING_FOR_HANG_DEPLOY(.363-.007),//.42
         // hello brett my king
         INIT(.37-.007),
-        TRANSFER(.438), //.444
+        TRANSFER(.44), //.444
         GRAB_BACK(.63 - .042-.007),
         WAIT_PLACE_BACK(.14 - .042-.007),
         PLACE_BACK(.12 - .042-.007),//.07
         PLACE_EXTRA_BACK(.03),
         HANG_POS(.23 - .042-.007),
         IDLE_POSITION(.41 - .042-.007),
-        TOUCH_BAR(.339 - .042-.007);
+        TOUCH_BAR(.342 - .042-.007);
 
         public final double pos;
 
@@ -193,15 +193,17 @@ public class NewOuttake extends SubSystem {
 
 
     public enum ClawPitch {
-        LESS_DOWN(.7543),
-        DOWN(.7618),
-        BACK(.9323),
-        BACK_ANGLED_DOWN(.83),
-        BACK2(.3215),
-        TRANSFER(.7008), //.435
-        FRONT_ANGLED_UP(.4644),
+        LESS_DOWN(.7543+.02),
+        DOWN(.7618+.02),
+        BACK(.9323+.02),
+        BACK_ANGLED_DOWN(.83+.02),
+        BACK2(.3215+.02),
+        TRANSFER(.7008+.02), //.435
+        FRONT_ANGLED_UP(.4644+.02),
 
-        FRONT(.6008);
+        FRONT(.6008+.02),
+
+        UP(.42);
 
 //        LESS_DOWN(.41 - .019),
 //        DOWN(.38 - .019),
@@ -228,11 +230,11 @@ public class NewOuttake extends SubSystem {
 
 
     public enum ClawPosition {
-        EXTRA_OPEN(.26),//.29
-        HANG_DEPLOY(.247),//.26
-        OPEN(.2),//.22
-        PARTIALOPEN(.115),//.12
-        CLOSED(.044);//.045
+        EXTRA_OPEN(.26-.018),//.29
+        HANG_DEPLOY(.33+.01),//.26
+        OPEN(.21-.014),//.22
+        PARTIALOPEN(.12-.018),//.12
+        CLOSED(.07-.018);//.045
 
 //        EXTRA_OPEN(.6),
 //        OPEN(.4),
@@ -284,7 +286,7 @@ public class NewOuttake extends SubSystem {
 
     private double transferAttemptCounter = 0;
 
-    private final double maxTransferAttempts = 2;
+    private final double maxTransferAttempts = 4;
 
     private boolean specimenDropBehind = false;
 
@@ -745,7 +747,7 @@ public class NewOuttake extends SubSystem {
                 }
                 break;
             case RETRACTING_FROM_PLACE_BEHIND:
-                if (outtakeTimer.seconds()>.3 && absError<.5) {
+                if (outtakeTimer.seconds()>.4 && absError<.5) {
                     if (targetV4BPos != V4BarPos.TRANSFER.pos) {
                         targetV4BPos = V4BarPos.TRANSFER.pos;
                         outtakeTimer.reset();
@@ -984,7 +986,7 @@ public class NewOuttake extends SubSystem {
                 }
                 break;
             case EXTRACTING_FROM_TRANSFER:
-                if (outtakeTimer.seconds()>.2) {
+                if (outtakeTimer.seconds()>.25) {
                     updateIntakeHoldingSample = true;
                     outtakeState = OuttakeState.VERIFYING_EXTRACTION;
                 }
@@ -1180,7 +1182,7 @@ public class NewOuttake extends SubSystem {
             targetSlidePos = VerticalSlide.PLACE_SPECIMEN_BAR.length;
             targetV4BPos = V4BarPos.PLACE_FRONT.pos;
 
-            
+            targetClawPitch = ClawPitch.DOWN.pos;
 
             outtakeState = OuttakeState.EXTENDING_PLACE_FRONT;
         }
@@ -1271,6 +1273,10 @@ public class NewOuttake extends SubSystem {
         else {
             return false;
         }
+    }
+
+    public void setClawPitch(double clawPitch) {
+        targetClawPitch = clawPitch;
     }
 
     private void setOuttakeState(OuttakeState outtakeState) {
