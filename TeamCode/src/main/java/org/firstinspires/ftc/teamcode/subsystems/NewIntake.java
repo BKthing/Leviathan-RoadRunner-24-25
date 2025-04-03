@@ -143,11 +143,11 @@ public class NewIntake extends SubSystem {
 
     public Boolean blueAlliance;
 
-
+//hi guys
     public enum HorizontalSlide {
         //18.9 max
-        EXTRA_IN(-.5),
-        IN(-.2),
+        EXTRA_IN(-.7),
+        IN(-.4),
         AUTO_PRESET1(13.5),
         AUTO_PRESET2(4),
         CLOSE(7),
@@ -167,6 +167,7 @@ public class NewIntake extends SubSystem {
 
 
     private int slideTicks = 0;
+    private int slideTickOffest = 0;
 
     private final Encoder horizontalSlideEncoder;
 
@@ -366,7 +367,7 @@ public class NewIntake extends SubSystem {
             changedServoBusCurrent = false;
         }
 
-        slideTicks = horizontalSlideEncoder.getCurrentPosition();
+        slideTicks = horizontalSlideEncoder.getCurrentPosition()- slideTickOffest;
 
         if (changedIsBreakBeam) {
             prevIsBreakBeam = isBreakBeam;
@@ -733,7 +734,7 @@ public class NewIntake extends SubSystem {
                 }
                 break;
             case INTAKING_IN_AGAIN:
-                if (intakingTimer.seconds()>.2) {
+                if (intakingTimer.seconds()>.25) {
                     intakingTimer.reset();
                     intakingState = IntakingState.FINISH_INTAKING;
                 }
@@ -967,13 +968,13 @@ public class NewIntake extends SubSystem {
                 }
                 break;
             case MOVE_SLIDES_MORE_IN:
-                setTargetSlidePos(-2.5);
+                setTargetSlidePos(-3);
                 intakeState =  IntakeState.RESET_SLIDES;
                 intakeTimer.reset();
                 break;
             case RESET_SLIDES:
                 if (intakeTimer.seconds() > .5) {
-                    horizontalLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    slideTickOffest = Math.min(horizontalSlideEncoder.getCurrentPosition(), slideTickOffest);
                     intakeState = IntakeState.WAITING_FOR_TRANSFER;
                 }
                 break;
@@ -1093,6 +1094,10 @@ public class NewIntake extends SubSystem {
 
     public double getActualSlidePos() {
         return slidePos;
+    }
+
+    public double getTargetSlidePos() {
+        return targetSlidePos;
     }
 
     public double getActualIntakePos() {

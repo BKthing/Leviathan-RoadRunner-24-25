@@ -109,10 +109,10 @@ public class NewOuttake extends SubSystem {
     public enum VerticalSlide {
         EXTRA_DOWN(-.3),
         DOWN(0),
-        TRANSFER(5.62),
+        TRANSFER(5.79),
         EXTRACT_FROM_TRANSFER(9),
         MIN_PASSTHROUGH_HEIGHT(8.5),
-        SPECIMEN_PICKUP(4.05),
+        SPECIMEN_PICKUP(3.7),
         CLEAR_SPECIMEN_BAR(6.6),
         SPECIMEN_BAR(8),
         PLACE_SPECIMEN_BAR(13.3),
@@ -138,6 +138,8 @@ public class NewOuttake extends SubSystem {
     private double prevSlideError;
 
     private int slideTicks = 0;
+
+    private double maxSlideHeight = 28.1;
 
     private boolean slideProfile = false;
 
@@ -171,7 +173,7 @@ public class NewOuttake extends SubSystem {
         WAITING_FOR_HANG_DEPLOY(.363-.007),//.42
         // hello brett my king
         INIT(.37-.007),
-        TRANSFER(.44), //.444
+        TRANSFER(.444-.003), //.444
         GRAB_BACK(.63 - .042-.007),
         WAIT_PLACE_BACK(.14 - .042-.007),
         PLACE_BACK(.12 - .042-.007),//.07
@@ -230,12 +232,12 @@ public class NewOuttake extends SubSystem {
 
 
     public enum ClawPosition {
-        EXTRA_OPEN(.26-.018),//.29
-        HANG_DEPLOY(.33+.01),//.26
-        OPEN(.21-.014),//.22
-        PARTIALOPEN(.12-.018),//.12
-        CLOSED(.07-.018);//.045
-
+        EXTRA_OPEN(.47),//.47
+        HANG_DEPLOY(.49),//.26
+        OPEN(.57),//.57
+        PARTIALOPEN(.64),//.64
+        CLOSED(.78);//.78
+//mmmmmmmmmmmmmmm
 //        EXTRA_OPEN(.6),
 //        OPEN(.4),
 //        CLOSED(.09);
@@ -295,6 +297,8 @@ public class NewOuttake extends SubSystem {
     private final ElapsedTimer outtakeLoopTimer = new ElapsedTimer();
 
     private final Telemetry.Item outtakeMotorPower;
+
+    private final Telemetry.Item outtakeSlidePosTelem;
     private final ReusableHardwareAction leftMotorReusableHardwareAction, rightMotorReusableHardwareAction, leftOuttakeServoReusableHardwareAction, rightOuttakeServoReusableHardwareAction, clawPitchServoReusableHardwareAction, clawServoReusableHardwareAction;
 
     public NewOuttake(SubSystemData data, NewIntake intake, Encoder verticalSlideEncoder, Boolean blueAlliance, boolean teleOpControls, boolean autoExtendSlides, boolean autoRetractSlides, boolean init, DoubleSupplier getVoltage) {
@@ -380,6 +384,8 @@ public class NewOuttake extends SubSystem {
         outtakeMotorPower = telemetry.addData("Outtake motor power", "");
 
         outtakeStateTelem = telemetry.addData("Outtakestate", outtakeState.toString());
+
+        outtakeSlidePosTelem = telemetry.addData("Outtake Slide Pos", "");
     }
 
 
@@ -482,6 +488,9 @@ public class NewOuttake extends SubSystem {
 //                        toOuttakeState = ToOuttakeState.RETRACT_FROM_PLACE_BEHIND;
                     } else {
                         retractFromGrabBehind();
+                        if (maxSlideHeight != 28.1) {
+                            maxSlideHeight = 28.1;
+                        }
 
                     }
                     slideProfile = false;
@@ -521,7 +530,7 @@ public class NewOuttake extends SubSystem {
                     slideVel = 0;
                 } else if (Math.abs(gamepad2.right_stick_y) > .05) {
                     if (!gamepad2.back) {
-                        targetSlidePos = MathUtil.clip(targetSlidePos+8 * slideTimer.seconds() * -gamepad2.right_stick_y * (1 - gamepad2.left_trigger * .75), -.5, 28.1);
+                        targetSlidePos = MathUtil.clip(targetSlidePos+8 * slideTimer.seconds() * -gamepad2.right_stick_y * (1 - gamepad2.left_trigger * .75), -.5,  maxSlideHeight);
                         slideProfile = false;
                         slideVel = 8 * -gamepad2.right_stick_y * (1 - gamepad2.left_trigger * .75);
                     }
@@ -602,6 +611,8 @@ public class NewOuttake extends SubSystem {
 
                 toOuttakeState = ToOuttakeState.IDLE;
 
+                maxSlideHeight = 18.2;
+
                 hookDropCount = 0;
                 break;
             case POWER_OFF_OUTTAKE_ARM:
@@ -662,6 +673,8 @@ public class NewOuttake extends SubSystem {
         double motorPower =  p  + d + f; //
         slideTimer.reset();
         prevSlideError = error;
+
+        outtakeSlidePosTelem.setValue(targetSlidePos);//18.2
 
         if ((actualMotorPower == 0 && motorPower != 0) || (actualMotorPower != 0 && motorPower == 1) || (Math.abs(motorPower-actualMotorPower)>.05)) {
             leftMotorReusableHardwareAction.setAndQueueAction(() -> verticalLeftMotor.setPower(motorPower));// * 12/voltage
@@ -994,23 +1007,22 @@ public class NewOuttake extends SubSystem {
             case VERIFYING_EXTRACTION:
                     //trys to grab sample again if first grab fails
                     if (intakeHoldingSample) {//intakeHoldingSample
-                        if (neverResetIntake ) {//transferAttemptCounter == 0
+//                        if (neverResetIntake ) {//transferAttemptCounter == 0
+//                            retractFromFront();
+//
+//                            intake.setIntakeState(NewIntake.IntakeState.MOVE_SLIDES_MORE_IN);
+//                            neverResetIntake = false;
+//
+//                            intake.setIntakingState(NewIntake.IntakingState.START_REINTAKING);
+//
+//
+//                            transferAttemptCounter++;
+//                    } else
+                    if (transferAttemptCounter < maxTransferAttempts) {
                             retractFromFront();
-
 
                             intake.setIntakeState(NewIntake.IntakeState.MOVE_SLIDES_MORE_IN);
-                            neverResetIntake = false;
 
-                            intake.setIntakingState(NewIntake.IntakingState.START_REINTAKING);
-
-
-
-
-
-                            transferAttemptCounter++;
-                        } else if (transferAttemptCounter < maxTransferAttempts) {
-
-                            retractFromFront();
                             intake.setIntakingState(NewIntake.IntakingState.START_UNJAMMING);
                             intake.setIntakeState(NewIntake.IntakeState.WAITING_FOR_TRANSFER);
 

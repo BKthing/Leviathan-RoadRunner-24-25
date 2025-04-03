@@ -95,7 +95,7 @@ public class RRRight5plus1Auto extends LinearOpMode {
                         outtake.toClawPosition(NewOuttake.ClawPosition.OPEN);
                         notCanceled = false;
                     })
-                    .splineToConstantHeading(new Vector2d(-5.5, 30.5), Math.toRadians(270), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-45, 53))
+                    .splineToConstantHeading(new Vector2d(-4.75, 30.5), Math.toRadians(270), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-45, 53))
                     .build();
 
             @Override
@@ -104,7 +104,7 @@ public class RRRight5plus1Auto extends LinearOpMode {
             }
         };
 
-        Action moveToGrabBlock1 = drivetrain.drive.actionBuilder(new Pose2d(-5.5, 30.5, Math.toRadians(270)))
+        Action moveToGrabBlock1 = drivetrain.drive.actionBuilder(new Pose2d(-4.75, 30.5, Math.toRadians(270)))
                 .setTangent(Math.toRadians(90))
                 .afterDisp(20, () -> {
                     intake.setTargetSlidePos(18.5);
@@ -118,11 +118,11 @@ public class RRRight5plus1Auto extends LinearOpMode {
                     intake.setTargetSlidePos(18.5);
                 })
 
-                .setTangent(new com.reefsharklibrary.data.Vector2d(-35.5, 41).minus(new com.reefsharklibrary.data.Vector2d(-25.5, 40.5)).getDirection())
+                .setTangent(new com.reefsharklibrary.data.Vector2d(-35.5, 41.5).minus(new com.reefsharklibrary.data.Vector2d(-25.5, 40.5)).getDirection())
                 .lineToXSplineHeading(-35.5, Math.toRadians(228))
                 .build();
 
-        Action moveToPlaceBlock2 = drivetrain.drive.actionBuilder(new Pose2d(-36.5, 41, Math.toRadians(228)))
+        Action moveToPlaceBlock2 = drivetrain.drive.actionBuilder(new Pose2d(-35.5, 41.5, Math.toRadians(228)))
                 .afterTime(0, () -> {
                     intake.setTargetSlidePos(18);
                 })
@@ -294,6 +294,7 @@ public class RRRight5plus1Auto extends LinearOpMode {
                 new InstantAction(() -> {
                     intake.setTargetSlidePos(18.5);
                     intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
+                    intake.setIntakingState(NewIntake.IntakingState.START_INTAKING);
                 })
 //                moveToPark
                 ));
