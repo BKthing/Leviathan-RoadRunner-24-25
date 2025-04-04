@@ -61,6 +61,8 @@ public class CameraPickupTest extends LinearOpMode {
 
     private double loopTime = .05;
 
+    private double prevExtensionError = 0;
+
     Vector2d holdPoint = new Vector2d(0, 0);
 
     double targetHeading = 0;
@@ -274,7 +276,9 @@ public class CameraPickupTest extends LinearOpMode {
                     if (Math.abs(drivetrain.getHoldPointError().minimizeHeading(Math.PI, -Math.PI).getHeading())<Math.toRadians(5)) {
                         grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.APPROACHING;
 
-                        extensionDistance = Math.max(vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset()-4, 2.5);//Math.max(extensionDistance+(vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset() - 4)*.125, 3);
+                        extensionDistance = Math.max(vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset()-3.5, 2.5);//Math.max(extensionDistance+(vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset() - 4)*.125, 3);
+                        prevExtensionError = 0;
+
                         intake.setTargetSlidePos(extensionDistance);
                     }
                     break;
@@ -286,8 +290,14 @@ public class CameraPickupTest extends LinearOpMode {
 //                            intake.setTargetSlidePos(extensionDistance);
 //                        }
 
-                    extensionDistance = Math.max(extensionDistance + (vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset() - intake.getTargetSlidePos() -4)*.1, 2.5);//Math.max(extensionDistance+(vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset() - 4)*.125, 3);
+                    double extensionError = (vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset() - intake.getTargetSlidePos() -3.5);
+
+                    double extensionErrorVel = (extensionError-prevExtensionError)/loopTime;
+
+                    extensionDistance = Math.max(extensionDistance + .15*extensionError - .0*extensionErrorVel, 2.5);//Math.max(extensionDistance+(vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset() - 4)*.125, 3);
                     intake.setTargetSlidePos(extensionDistance);
+
+                    prevExtensionError = extensionError;
 
                     //adjust holdPoint heading
                     targetHeading = MathUtil.clip(Rotation.inRange(prevHeading+Rotation.inRange((vision.getTargetRobotPose().getHeading()-prevHeading), Math.PI, -Math.PI)*.15, 2*Math.PI, 0), minGrabAngle, maxGrabAngle);

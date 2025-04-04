@@ -4,11 +4,13 @@ import static org.opencv.core.CvType.CV_8UC1;
 import static org.opencv.imgproc.Imgproc.COLOR_GRAY2BGR;
 import static org.firstinspires.ftc.teamcode.util.RobotConstants.cameraColumns;
 import static org.firstinspires.ftc.teamcode.util.RobotConstants.cameraRows;
+import static org.opencv.imgproc.Imgproc.LINE_4;
 
 import com.reefsharklibrary.data.Vector2d;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
@@ -77,6 +79,8 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
     Vector2d intakePoint = new Vector2d(cameraColumns/2, cameraRows/2);
 
     private Vector2d targetBlockPixels = new Vector2d(0, 0);
+    private Vector2d closestTargetBLockPixels = new Vector2d(0, 0);
+
 
     public AtomicBoolean hasSample = new AtomicBoolean();
 
@@ -233,6 +237,13 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
 
                 setTargetBlockPixels(intakePoint);
 
+
+                Vector2d closestIntakePoint = findClosestEdge(blockVectorField, intakePoint, 32, 165);
+                setClosestTargetBlockPixels(closestIntakePoint);
+
+
+                Imgproc.line(output, new Point(closestIntakePoint.getX(), (int) MathUtil.clip((int) closestIntakePoint.getY() - halfHeight, 0, cameraRows)), new Point(closestIntakePoint.getX(), (int) MathUtil.clip((int) closestIntakePoint.getY() + halfHeight, 0, cameraRows)), blue, 3);
+
                 boolean newHasSample = safeGetMat(blockPullVectorField, intakePoint.getX(), intakePoint.getY())>175;
 
                 if (newHasSample != hasSampleValue) {
@@ -288,6 +299,43 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
         }
     }
 
+    private Vector2d findClosestEdge (Mat mat, Vector2d startPoint, int reach, int cutoff) {
+        int diagReach = (int) ((double)reach*Math.sqrt(2)/2);
+
+//        double cur = safeGetMat(mat, startPoint.getX(), startPoint.getY());
+        double down = safeGetMat(mat, startPoint.getX()+reach, startPoint.getY());
+        double downRight = safeGetMat(mat, startPoint.getX()+diagReach, startPoint.getY()-diagReach);
+        double downLeft = safeGetMat(mat, startPoint.getX()+diagReach, startPoint.getY()+diagReach);
+        double right = safeGetMat(mat, startPoint.getX(), startPoint.getY()-reach);
+        double left = safeGetMat(mat, startPoint.getX(), startPoint.getY()+reach);
+
+
+        if (startPoint.getX() != mat.cols()-1) {
+            if (down > cutoff) {
+                return findClosestEdge(mat, new Vector2d(MathUtil.clip(startPoint.getX()+reach, 0, mat.cols()-1), startPoint.getY()), reach, cutoff);
+            } else if (downLeft > cutoff && downLeft>downRight) {
+                return findClosestEdge(mat, new Vector2d(MathUtil.clip(startPoint.getX()+diagReach, 0, mat.cols()-1), MathUtil.clip(startPoint.getY()-diagReach, 0, mat.rows()-1)), reach, cutoff);
+            } else if (downRight > cutoff) {
+                return findClosestEdge(mat, new Vector2d(MathUtil.clip(startPoint.getX()+diagReach, 0, mat.cols()-1), MathUtil.clip(startPoint.getY()+diagReach, 0, mat.rows()-1)), reach, cutoff);
+            }
+        }
+
+        if (right > cutoff && right > left && startPoint.getY() != 0) {
+            return findClosestEdge(mat, new Vector2d(startPoint.getX(), MathUtil.clip(startPoint.getY()-reach, 0, mat.rows()-1)), reach, cutoff);
+        } else if (left > cutoff && startPoint.getY() != mat.rows()-1) {
+            return findClosestEdge(mat, new Vector2d(startPoint.getX(), MathUtil.clip(startPoint.getY()+reach, 0, mat.rows()-1)), reach, cutoff);
+        }
+
+        if (reach>4) {
+                return findClosestEdge(mat, startPoint, reach/2, cutoff);
+            } else {
+                return startPoint;
+            }
+
+    }
+
+
+
     private double safeGetMat(Mat mat, double y, double x) {
         try {
             return mat.get((int) MathUtil.clip(x, 0, mat.rows()-1), (int) MathUtil.clip(y, 0, mat.cols()-1))[0];
@@ -302,5 +350,13 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
 
     public synchronized Vector2d getTargetBlockPixels() {
         return targetBlockPixels;
+    }
+
+    public synchronized void setClosestTargetBlockPixels(Vector2d vector2d) {
+        closestTargetBLockPixels = vector2d;
+    }
+
+    public synchronized Vector2d getClosestTargetBlockPixels() {
+        return closestTargetBLockPixels;
     }
 }

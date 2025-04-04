@@ -90,7 +90,7 @@ public class VisionSubsystem extends SubSystem {
         }
 
         if (hasSampleVal) {
-            Vector2d relCords = pixelToRelFieldCords(pipeline.getTargetBlockPixels());
+            Vector2d relCords = pixelToRelFieldCords(pipeline.getClosestTargetBlockPixels());
             targetSamplePose = intakePose.getVector2d().plus(relCords.rotate(intakePose.getHeading()));
 
             visionsTelem.setValue(relCords.getX() + " angle: " + relCords.getY());
@@ -137,11 +137,11 @@ public class VisionSubsystem extends SubSystem {
         double horizontalAngle = Math.toRadians(((targetBlockPixels.getY()-cameraRows/2)/cameraRows)*60.45786);
         double verticalAngle = Math.toRadians(((cameraColumns/2-targetBlockPixels.getX())/cameraColumns)*44.36924 + 30.87+6);
 
-        double xOffset = Math.tan(verticalAngle)*(intakeHeight-1)+1;
+        double xOffset = Math.tan(verticalAngle)*(intakeHeight)+1;//Math.tan(verticalAngle)*(intakeHeight-1)+1
 
-        double hypotonus = Math.sqrt(xOffset*xOffset+(intakeHeight-1)*(intakeHeight-1));
+        double hypotenuse = Math.sqrt(xOffset*xOffset+(intakeHeight)*(intakeHeight));
 
-        double yOffset = Math.tan(horizontalAngle)*hypotonus;
+        double yOffset = Math.tan(horizontalAngle)*hypotenuse;
 //        double xOffset =
         return new Vector2d(xOffset, yOffset);
     }
