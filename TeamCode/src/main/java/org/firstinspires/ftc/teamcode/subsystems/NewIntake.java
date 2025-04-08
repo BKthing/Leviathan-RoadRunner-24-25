@@ -190,7 +190,7 @@ public class NewIntake extends SubSystem {
         AUTO_SHOVE_HEIGHT(.39),
         PARTIAL_UP(.5),//.11),
         SEARCH(.53),
-        DOWN(.42);//.16);//.05
+        DOWN(.39);//.16);//.05
 
         public final double pos;
         IntakePos(double pos) {this.pos = pos;}
@@ -452,9 +452,9 @@ public class NewIntake extends SubSystem {
                 }
 
             } else {
-                if (gamepad1.left_bumper) {
-                    targetIntakePos = IntakePos.SEARCH.pos;
-                }
+//                if (gamepad1.left_bumper) {
+//                    targetIntakePos = IntakePos.SEARCH.pos;
+//                }
 
                 if (gamepad2.dpad_down && !oldGamePad2.dpad_down) {
                     toIntakeState = ToIntakeState.RETRACT;
@@ -536,7 +536,7 @@ public class NewIntake extends SubSystem {
                 break;
             case SEARCH_POSITION:
                 targetIntakePos = IntakePos.SEARCH.pos;
-                targetSlidePos = 3;
+                targetSlidePos = 1.5;
                 targetIntakeSpeed = 0;
 
                 toIntakeState = ToIntakeState.IDLE;

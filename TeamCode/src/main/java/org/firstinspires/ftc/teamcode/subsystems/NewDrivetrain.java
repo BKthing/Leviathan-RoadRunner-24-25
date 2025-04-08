@@ -507,6 +507,10 @@ public class NewDrivetrain extends SubSystem {
         return roadRunnerPoseEstimate;
     }
 
+    public Pose2d getPoseVelocity() {
+        return roadRunnerPoseVelocity;
+    }
+
     public Pose2d getIntakePoseEstimate() {
         return robotToIntakePos(roadRunnerPoseEstimate != null ? roadRunnerPoseEstimate : new Pose2d(0, 0, 0), intakeDistance);
     }

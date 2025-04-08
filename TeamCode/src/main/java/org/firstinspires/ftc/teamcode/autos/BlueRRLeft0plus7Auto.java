@@ -39,6 +39,8 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
         SEARCHING,
         APPROACHING_HEADING,
         APPROACHING,
+        MOVING_FORWARD,
+        DROPPING_INTAKE,
         INTAKING_1,
         RETRACTING,
         INTAKING_2,

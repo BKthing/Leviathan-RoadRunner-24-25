@@ -14,13 +14,13 @@ public class RobotConstants {
 
     public static double lateralF = .02;
 
-    public static double headingF = .032;
+    public static double headingF = .03;
 
-    public static PIDCoeficients headingPID = new PIDCoeficients(.11, .0, 0.005);//.0002
+    public static PIDCoeficients headingPID = new PIDCoeficients(.125, .0, 0.006);//.0002
 
 //    public static PIDCoeficients headingPointPID = new PIDCoeficients(.055, 0, 0.0003);//.002
 
-    public static Pose2d naturalDecel = new Pose2d(250, 250, Math.toRadians(600));//400, 400
+    public static Pose2d naturalDecel = new Pose2d(250, 250, Math.toRadians(550));//400, 400
 
     public static double trackWidth = 16;
 

@@ -164,23 +164,23 @@ public class NewOuttake extends SubSystem {
     private double voltage = 13;
 
     public enum V4BarPos {
-        PLACE_FRONT(.34 - .042 -.007),
-        FIRST_FRONT(.335 - .042-.007),
-        CLEAR_FRONT_BAR(.29 - .042-.007),
+        PLACE_FRONT(.34 - .042 -.002),
+        FIRST_FRONT(.335 - .042-.002),
+        CLEAR_FRONT_BAR(.29 - .042-.002),
 //        WAIT_FOR_TRANSFER(.35),
-        RELEASE_HANG_HOOKS(.53 - .042-.007),
-        MID_POSITION_CUTOFF(.55 - .042-.007),
-        WAITING_FOR_HANG_DEPLOY(.363-.007),//.42
+        RELEASE_HANG_HOOKS(.53 - .042-.002),
+        MID_POSITION_CUTOFF(.55 - .042-.002),
+        WAITING_FOR_HANG_DEPLOY(.363-.002),//.42
         // hello brett my king
-        INIT(.37-.007),
-        TRANSFER(.444-.003), //.444
-        GRAB_BACK(.63 - .042-.007),
-        WAIT_PLACE_BACK(.14 - .042-.007),
-        PLACE_BACK(.12 - .042-.007),//.07
-        PLACE_EXTRA_BACK(.03),
-        HANG_POS(.23 - .042-.007),
-        IDLE_POSITION(.41 - .042-.007),
-        TOUCH_BAR(.342 - .042-.007);
+        INIT(.37-.002),
+        TRANSFER(.444-.003+.008), //.444
+        GRAB_BACK(.63 - .042-.002),
+        WAIT_PLACE_BACK(.14 - .042-.002),
+        PLACE_BACK(.12 - .042-.002),//.07
+        PLACE_EXTRA_BACK(.03+.005),
+        HANG_POS(.23 - .042-.002),
+        IDLE_POSITION(.41 - .042-.002),
+        TOUCH_BAR(.342 - .042-.002);
 
         public final double pos;
 

@@ -238,7 +238,7 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
                 setTargetBlockPixels(intakePoint);
 
 
-                Vector2d closestIntakePoint = findClosestEdge(blockVectorField, intakePoint, 32, 165);
+                Vector2d closestIntakePoint = findClosestEdge(blockVectorField, intakePoint, 32, 170);
                 setClosestTargetBlockPixels(closestIntakePoint);
 
 
@@ -302,7 +302,7 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
     private Vector2d findClosestEdge (Mat mat, Vector2d startPoint, int reach, int cutoff) {
         int diagReach = (int) ((double)reach*Math.sqrt(2)/2);
 
-//        double cur = safeGetMat(mat, startPoint.getX(), startPoint.getY());
+        double cur = safeGetMat(mat, startPoint.getX(), startPoint.getY());
         double down = safeGetMat(mat, startPoint.getX()+reach, startPoint.getY());
         double downRight = safeGetMat(mat, startPoint.getX()+diagReach, startPoint.getY()-diagReach);
         double downLeft = safeGetMat(mat, startPoint.getX()+diagReach, startPoint.getY()+diagReach);
@@ -320,9 +320,9 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
             }
         }
 
-        if (right > cutoff && right > left && startPoint.getY() != 0) {
+        if (right > cutoff && right > cur && right >  left && startPoint.getY() != 0) {
             return findClosestEdge(mat, new Vector2d(startPoint.getX(), MathUtil.clip(startPoint.getY()-reach, 0, mat.rows()-1)), reach, cutoff);
-        } else if (left > cutoff && startPoint.getY() != mat.rows()-1) {
+        } else if (left > cutoff && left > cur && startPoint.getY() != mat.rows()-1) {
             return findClosestEdge(mat, new Vector2d(startPoint.getX(), MathUtil.clip(startPoint.getY()+reach, 0, mat.rows()-1)), reach, cutoff);
         }
 
