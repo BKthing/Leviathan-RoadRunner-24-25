@@ -37,7 +37,7 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
 
     private boolean grabAllianceColor = false;
 
-    Scalar lowB = new Scalar(105, 120, 20);
+    Scalar lowB = new Scalar(95, 80, 15);
     Scalar highB = new Scalar(150, 255, 250);
 
     Scalar lowR = new Scalar(0, 120, 25);
@@ -74,7 +74,7 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
     Mat combinedVectorField = new Mat(cameraRows, cameraColumns, CV_8UC1, neutral);
     Mat baseVectorField = new Mat(cameraRows, cameraColumns, CV_8UC1);
 
-    Mat blockVectorField, blockPushVectorField, blockPullVectorField;
+    Mat blockVectorField, blockPushVectorField, blockPullVectorField, rawBlockPullVectorField;
 
     Vector2d intakePoint = new Vector2d(cameraColumns/2, cameraRows/2);
 
@@ -148,25 +148,32 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
         blockVectorField = new Mat(cameraRows, cameraColumns, CV_8UC1, neutral);
         blockPushVectorField = new Mat(cameraRows, cameraColumns, CV_8UC1, neutral);
         blockPullVectorField = new Mat(cameraRows, cameraColumns, CV_8UC1, neutral);
-
+        rawBlockPullVectorField = new Mat(cameraRows, cameraColumns, CV_8UC1, push);
 
         if (blueAlliance) {
             blockPullVectorField.setTo(pull, maskBlue);
+            rawBlockPullVectorField.setTo(pull, maskBlue);
+
             if (grabAllianceColor) {
                 blockPushVectorField.setTo(push, maskYellow);
             } else {
                 blockPullVectorField.setTo(pull, maskYellow);
+                rawBlockPullVectorField.setTo(pull, maskYellow);
             }
             blockPushVectorField.setTo(push, maskRed);
         } else {
             blockPullVectorField.setTo(pull, maskRed);
+            rawBlockPullVectorField.setTo(pull, maskRed);
             if (grabAllianceColor) {
                 blockPushVectorField.setTo(push, maskYellow);
             } else {
                 blockPullVectorField.setTo(pull, maskYellow);
+                rawBlockPullVectorField.setTo(pull, maskYellow);
             }
             blockPushVectorField.setTo(push, maskBlue);
         }
+
+
 
         //push cleaning
         Imgproc.dilate(blockPushVectorField, blockPushVectorField, smallElement);
@@ -209,7 +216,7 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
                 break;
             case BLOCK_VECTOR_FIELD:
                 //                output.setTo(blockVectorField);
-                Imgproc.cvtColor(blockVectorField, output, COLOR_GRAY2BGR);
+                Imgproc.cvtColor(rawBlockPullVectorField, output, COLOR_GRAY2BGR);
                 //                blockVectorField.convertTo(output, COLOR_GRAY2BGR);
                 if (reCenter.compareAndSet(true, false)) {
                     intakePoint = new Vector2d(cameraColumns/2, cameraRows/2);
@@ -238,7 +245,7 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
                 setTargetBlockPixels(intakePoint);
 
 
-                Vector2d closestIntakePoint = findClosestEdge(blockVectorField, intakePoint, 32, 170);
+                Vector2d closestIntakePoint = findClosestEdge(rawBlockPullVectorField, intakePoint, 32, 175);
                 setClosestTargetBlockPixels(closestIntakePoint);
 
 

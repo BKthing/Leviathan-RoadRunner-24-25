@@ -20,7 +20,7 @@ public class RobotConstants {
 
 //    public static PIDCoeficients headingPointPID = new PIDCoeficients(.055, 0, 0.0003);//.002
 
-    public static Pose2d naturalDecel = new Pose2d(250, 250, Math.toRadians(550));//400, 400
+    public static Pose2d naturalDecel = new Pose2d(250, 250, Math.toRadians(650));//400, 400
 
     public static double trackWidth = 16;
 

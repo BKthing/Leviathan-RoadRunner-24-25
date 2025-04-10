@@ -257,8 +257,15 @@ public class CameraPickupTest extends LinearOpMode {
 
                         drivetrain.holdPoint(holdPoint.toPose(targetHeading));
 
+                        grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.APPROACHING;
+
+                        extensionDistance = Math.max(vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset()-3.5, 2.5);//Math.max(extensionDistance+(vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset() - 4)*.125, 3);
+                        prevExtensionError = 0;
+
                         autoTimer.reset();
-                        grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.APPROACHING_HEADING;
+
+                        intake.setTargetSlidePos(extensionDistance);
+//                        grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.APPROACHING_HEADING;
                     } else if (autoTimer.seconds()>.5) {
                         if (!searching) {
                             drivetrain.cancelHoldPoint();
@@ -269,19 +276,6 @@ public class CameraPickupTest extends LinearOpMode {
                             searching = true;
                         }
                         searching = searchTurn.run(telemetryPacket);
-                    }
-                    break;
-                case APPROACHING_HEADING:
-                    targetHeading = MathUtil.clip(Rotation.inRange(prevHeading+Rotation.inRange((vision.getTargetRobotPose().getHeading()-prevHeading), Math.PI, -Math.PI)*.15, 2*Math.PI, 0), minGrabAngle, maxGrabAngle);
-                    drivetrain.holdPoint(holdPoint.toPose(targetHeading));
-
-                    if (Math.abs(drivetrain.getHoldPointError().minimizeHeading(Math.PI, -Math.PI).getHeading())<Math.toRadians(20)) {
-                        grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.APPROACHING;
-
-                        extensionDistance = Math.max(vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset()-3.5, 2.5);//Math.max(extensionDistance+(vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset() - 4)*.125, 3);
-                        prevExtensionError = 0;
-
-                        intake.setTargetSlidePos(extensionDistance);
                     }
                     break;
                 case APPROACHING:
@@ -299,58 +293,18 @@ public class CameraPickupTest extends LinearOpMode {
 
                     drivetrain.holdPoint(holdPoint.toPose(targetHeading));//, maxGrabAngle
 
-                    if (drivetrain.getHoldPointError().minimizeHeading(Math.PI, -Math.PI).inRange(new com.reefsharklibrary.data.Pose2d(1, 1, Math.toRadians(3.5)))
-                        && drivetrain.getPoseVelocity().minimizeHeading(Math.PI, -Math.PI).inRange(new com.reefsharklibrary.data.Pose2d(.5, .5, Math.toRadians(.5))) && Math.abs(extensionError)<.8 && Math.abs(extensionErrorVel)<.5) {
-                        extensionDistance = intake.getTargetSlidePos()+3;
+                    if (autoTimer.seconds()>1 || (drivetrain.getHoldPointError().minimizeHeading(Math.PI, -Math.PI).inRange(new com.reefsharklibrary.data.Pose2d(1, 1, Math.toRadians(3.5)))
+                        && drivetrain.getPoseVelocity().minimizeHeading(Math.PI, -Math.PI).inRange(new com.reefsharklibrary.data.Pose2d(.5, .5, Math.toRadians(.5))) && Math.abs(extensionError)<1 && Math.abs(extensionErrorVel)<.5)) {
+                        extensionDistance = intake.getTargetSlidePos()+1.7;
                         intake.setTargetSlidePos(extensionDistance);
-                        grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.MOVING_FORWARD;
 
-                        autoTimer.reset();
-                    }
-                    break;
-                case MOVING_FORWARD:
-                    if (autoTimer.seconds()>.3) {
                         intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
                         intake.setIntakingState(NewIntake.IntakingState.START_INTAKING);
                         autoTimer.reset();
-                        grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.INTAKING_1;
-                    }
-                    break;
-                case INTAKING_1:
-//hello brett king
-                    if (autoTimer.seconds()>.4) {
-                        grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.RETRACTING;
-                        autoTimer.reset();
-                    }
-//                    else {
-//                        targetHeading = MathUtil.clip(Rotation.inRange(prevHeading + Rotation.inRange((vision.getTargetRobotPose().getHeading() - prevHeading), Math.PI, -Math.PI) * .15, 2 * Math.PI, 0), minGrabAngle, maxGrabAngle);
-//
-//                        drivetrain.holdPoint(holdPoint.toPose(targetHeading));
-//
-//                        extensionDistance = MathUtil.clip(extensionDistance + 12 * loopTime, -.5, 18.5);
-//                        intake.setTargetSlidePos(extensionDistance);
-//
-//                    }
-                    break;
-                case RETRACTING:
-
-                    if (autoTimer.seconds()>.2 || extensionDistance == 2) {
                         grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.INTAKING_2;
-                    } else {
-                        targetHeading = MathUtil.clip(Rotation.inRange(prevHeading + Rotation.inRange((vision.getTargetRobotPose().getHeading() - prevHeading), Math.PI, -Math.PI) * .15, 2 * Math.PI, 0), minGrabAngle, maxGrabAngle);
-
-                        drivetrain.holdPoint(holdPoint.toPose(targetHeading));
-
-                        extensionDistance = MathUtil.clip(extensionDistance - 8 * loopTime, 2, 18.5);
-                        intake.setTargetSlidePos(extensionDistance);
-
                     }
                     break;
                 case INTAKING_2:
-
-//                    targetHeading = MathUtil.clip(Rotation.inRange(prevHeading + Rotation.inRange((vision.getTargetRobotPose().getHeading() - prevHeading), Math.PI, -Math.PI) * .15, 2 * Math.PI, 0), minGrabAngle, maxGrabAngle);
-
-//                    drivetrain.holdPoint(holdPoint.toPose(targetHeading));
 
                     if (autoTimer.seconds() > 2) {
                         intake.toIntakeState(NewIntake.ToIntakeState.SEARCH_POSITION);
