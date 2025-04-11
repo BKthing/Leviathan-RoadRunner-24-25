@@ -1203,6 +1203,11 @@ public class NewOuttake extends SubSystem {
 
 //    private void extend
 
+    public void setVerticalSlidePower(double power) {
+        verticalLeftMotor.setPower(power);
+        verticalRightMotor.setPower(power);
+    }
+
     private void dropBehind() {
         targetClawPitch = ClawPitch.FRONT.pos;
         if (clawPosition != ClawPosition.CLOSED){

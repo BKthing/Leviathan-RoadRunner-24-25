@@ -64,6 +64,7 @@ public class NewIntake extends SubSystem {
         INTAKING,
         INTAKING_A_LITTLE_MORE,
         INTAKING_SPIN_OUT,
+        START_INTAKING_IN_AGAIN,
         INTAKING_IN_AGAIN,
         FINISH_INTAKING,
         HOLDING_SAMPLE,
@@ -150,6 +151,7 @@ public class NewIntake extends SubSystem {
         IN(-.4),
         AUTO_PRESET1(13.5),
         AUTO_PRESET2(4),
+        SEARCH_POS(4),
         CLOSE(7),
         MEDIUM(12),
         FAR(16);//17
@@ -536,7 +538,7 @@ public class NewIntake extends SubSystem {
                 break;
             case SEARCH_POSITION:
                 targetIntakePos = IntakePos.SEARCH.pos;
-                targetSlidePos = 0;
+                targetSlidePos = HorizontalSlide.SEARCH_POS.length;
                 targetIntakeSpeed = 0;
 
                 toIntakeState = ToIntakeState.IDLE;
@@ -630,12 +632,13 @@ public class NewIntake extends SubSystem {
             actualIntakePos = targetIntakePos;
         }
 
-        if (Double.isFinite(targetIntakeSpeed) && (Double.isNaN(actualIntakeSpeed) || Math.abs(targetIntakeSpeed-actualIntakeSpeed)>.04)) {
+        if (!Double.isNaN(targetIntakeSpeed) && (Double.isNaN(actualIntakeSpeed) || Math.abs(targetIntakeSpeed-actualIntakeSpeed)>.04)) {
             leftSpinnerServoHardwareAction.setAndQueueAction(() -> leftSpinnerServo.setPower(targetIntakeSpeed));
             rightSpinnerServoHardwareAction.setAndQueueAction(() -> rightSpinnerServo.setPower(targetIntakeSpeed));
 
             actualIntakeSpeed = targetIntakeSpeed;
         }
+
 //        if (servoBusCurrent < 4) {
             servoStallTimer.reset();
 //        }
@@ -721,37 +724,57 @@ public class NewIntake extends SubSystem {
                     actualIntakeSpeed = targetIntakeSpeed;
 
 //                    leftSpinnerServoHardwareAction.setAndQueueAction(() -> {
-                    rightSpinnerServo.setPower(1);
-
-                    leftSpinnerServo.setPower(-1);
+//                        leftSpinnerServo.setPower(1);
 //                    });
+//                    rightSpinnerServoHardwareAction.setAndQueueAction(() -> {
+                        rightSpinnerServo.setPower(-.8);
+//                    });
+
                     intakingTimer.reset();
                     intakingState = IntakingState.INTAKING_SPIN_OUT;
                 }
                 break;
             case INTAKING_SPIN_OUT:
-                if (intakingTimer.seconds()>.25) {
-                    targetIntakeSpeed = 1;
-                    actualIntakeSpeed = targetIntakeSpeed;
-
+                if (intakingTimer.seconds()>.2) {
 //                    leftSpinnerServoHardwareAction.setAndQueueAction(() -> {
-                    rightSpinnerServo.setPower(1);
-                    leftSpinnerServo.setPower(1);
+//                        leftSpinnerServo.setPower(0);
 //                    });
+
+//                    rightSpinnerServoHardwareAction.setAndQueueAction(() -> {
+                        rightSpinnerServo.setPower(1);
+//                    });
+
                     intakingTimer.reset();
                     intakingState = IntakingState.INTAKING_IN_AGAIN;
                 }
                 break;
+//            case START_INTAKING_IN_AGAIN:
+//                if (intakingTimer.seconds()>.1) {
+//                    targetIntakeSpeed = 1;
+//                    actualIntakeSpeed = targetIntakeSpeed;
+//
+//                    leftSpinnerServoHardwareAction.setAndQueueAction(() -> {
+//                        leftSpinnerServo.setPower(1);
+//                    });
+//
+//                    intakingTimer.reset();
+//                    intakingState = IntakingState.INTAKING_IN_AGAIN;
+//                }
+//                break;
             case INTAKING_IN_AGAIN:
                 if (intakingTimer.seconds()>.25) {
                     intakingTimer.reset();
                     intakingState = IntakingState.FINISH_INTAKING;
+
+                    //reset bc the spin out process provides a spike to servo current
+                    servoStallTimer.reset();
                 }
                 break;
             case FINISH_INTAKING:
-                if (changedServoBusCurrent && servoStallTimer.seconds() > .3) {
-                    intakingState = IntakingState.SERVO_STALL_START_UNJAMMING;
-                } if (intakingTimer.seconds()>.8 || targetIntakeSpeed == 0) {
+//                if (changedServoBusCurrent && servoStallTimer.seconds() > .3) {
+//                    intakingState = IntakingState.SERVO_STALL_START_UNJAMMING;
+//                }
+                if (intakingTimer.seconds()>.8 || targetIntakeSpeed == 0) {
 //                    targetIntakeSpeed = 0;
 
                     intakingState = IntakingState.HOLDING_SAMPLE;
@@ -812,6 +835,8 @@ public class NewIntake extends SubSystem {
                 if (intakingTimer.seconds()>.5) {
                     intakingTimer.reset();
                     intakingState = IntakingState.UNJAMMING_FINISH_SPIN_IN;
+                    transfer = true;
+                    intakeState = IntakeState.WAITING_FOR_TRANSFERRING;
                 }
                 break;
             case UNJAMMING_FINISH_SPIN_IN:

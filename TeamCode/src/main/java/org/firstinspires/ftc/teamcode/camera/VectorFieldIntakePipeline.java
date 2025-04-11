@@ -219,19 +219,19 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
                 Imgproc.cvtColor(rawBlockPullVectorField, output, COLOR_GRAY2BGR);
                 //                blockVectorField.convertTo(output, COLOR_GRAY2BGR);
                 if (reCenter.compareAndSet(true, false)) {
-                    intakePoint = new Vector2d(cameraColumns/2, cameraRows/2);
+                    intakePoint = new Vector2d(cameraColumns* .75, cameraRows*.5);
                 }
 
                 intakePoint = searchField(blockVectorField, intakePoint, 64);
 
                 if (safeGetMat(blockPullVectorField, intakePoint.getX(), intakePoint.getY()) < 140) {
-                    intakePoint = searchField(blockVectorField, new Vector2d(cameraColumns/2, cameraRows/2), 64);
+                    intakePoint = searchField(blockVectorField, new Vector2d(cameraColumns*.5, cameraRows*.5), 64);
 
                     if (safeGetMat(blockPullVectorField, intakePoint.getX(), intakePoint.getY()) < 140) {
-                        intakePoint = searchField(blockVectorField, new Vector2d(cameraColumns/4, cameraRows/4), 64);
+                        intakePoint = searchField(blockVectorField, new Vector2d(cameraColumns*.5, cameraRows*.5), 64);
 
                         if (safeGetMat(blockPullVectorField, intakePoint.getX(), intakePoint.getY()) < 140) {
-                            intakePoint = searchField(blockVectorField, new Vector2d(cameraColumns*3/4, cameraRows*3/4), 64);
+                            intakePoint = searchField(blockVectorField, new Vector2d(cameraColumns*.75, cameraRows*.75), 64);
                         }
                     }
                 }
