@@ -547,4 +547,12 @@ public class NewDrivetrain extends SubSystem {
         backRight.setPower(0);
         frontRight.setPower(0);
     }
+
+    public void breakMoters() {
+        frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+    }
 }

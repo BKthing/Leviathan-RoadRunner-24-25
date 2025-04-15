@@ -24,6 +24,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import java.util.function.DoubleSupplier;
 
 import org.firstinspires.ftc.teamcode.PassData;
+import org.firstinspires.ftc.teamcode.teleops.DisableColorSensor;
 import org.firstinspires.ftc.teamcode.util.Encoder;
 import org.firstinspires.ftc.teamcode.util.MathUtil;
 import org.firstinspires.ftc.teamcode.util.threading.SubSystemData;
@@ -130,6 +131,7 @@ public class NewIntake extends SubSystem {
         PARTIAL_RAISE_INTAKE,
         RAISE_TO_AUTO_HEIGHT,
         SEARCH_POSITION,
+        SEARCH_POSITION_KEEP_SPINNING,
         RETRACT,
         RETRACT_AND_STOP_INTAKING,
         IDLE
@@ -151,7 +153,7 @@ public class NewIntake extends SubSystem {
         IN(-.4),
         AUTO_PRESET1(13.5),
         AUTO_PRESET2(4),
-        SEARCH_POS(4),
+        SEARCH_POS(4.5),
         CLOSE(7),
         MEDIUM(12),
         FAR(16);//17
@@ -192,7 +194,7 @@ public class NewIntake extends SubSystem {
         AUTO_SHOVE_HEIGHT(.39),
         PARTIAL_UP(.5),//.11),
         SEARCH(.53),
-        DOWN(.39);//.16);//.05
+        DOWN(.422);//.16);//.05
 
         public final double pos;
         IntakePos(double pos) {this.pos = pos;}
@@ -349,6 +351,10 @@ public class NewIntake extends SubSystem {
 
         intakeLoopTime = telemetry.addData("Intake loop time", "");
 
+        if(!Double.isFinite(colorSensor.getNormalizedColors().red) && PassData.checkingColorSensor) {
+
+            throw new RuntimeException("color sensor not working");
+        }
     }
 
 
@@ -543,6 +549,12 @@ public class NewIntake extends SubSystem {
 
                 toIntakeState = ToIntakeState.IDLE;
                 break;
+            case SEARCH_POSITION_KEEP_SPINNING:
+                targetIntakePos = IntakePos.SEARCH.pos;
+                targetSlidePos = HorizontalSlide.SEARCH_POS.length;
+
+                toIntakeState = ToIntakeState.IDLE;
+                break;
             case RETRACT:
                 targetIntakePos = IntakePos.UP.pos;
                 intakeTimer.reset();
@@ -639,9 +651,9 @@ public class NewIntake extends SubSystem {
             actualIntakeSpeed = targetIntakeSpeed;
         }
 
-//        if (servoBusCurrent < 4) {
+        if (servoBusCurrent < 4) {
             servoStallTimer.reset();
-//        }
+        }
 
         switch (intakingState) {
             case START_INTAKING:
@@ -735,32 +747,35 @@ public class NewIntake extends SubSystem {
                 }
                 break;
             case INTAKING_SPIN_OUT:
-                if (intakingTimer.seconds()>.2) {
+                if (intakingTimer.seconds()>.14) {
 //                    leftSpinnerServoHardwareAction.setAndQueueAction(() -> {
 //                        leftSpinnerServo.setPower(0);
 //                    });
 
 //                    rightSpinnerServoHardwareAction.setAndQueueAction(() -> {
                         rightSpinnerServo.setPower(1);
+                        leftSpinnerServo.setPower(-.8);
+//                    });
+
+                    intakingTimer.reset();
+                    intakingState = IntakingState.START_INTAKING_IN_AGAIN;
+                }
+                break;
+            case START_INTAKING_IN_AGAIN:
+                if (intakingTimer.seconds()>.1) {
+                    targetIntakeSpeed = 1;
+                    actualIntakeSpeed = targetIntakeSpeed;
+
+//                    leftSpinnerServoHardwareAction.setAndQueueAction(() -> {
+                        leftSpinnerServo.setPower(1);
+                        rightSpinnerServo.setPower(1);
+
 //                    });
 
                     intakingTimer.reset();
                     intakingState = IntakingState.INTAKING_IN_AGAIN;
                 }
                 break;
-//            case START_INTAKING_IN_AGAIN:
-//                if (intakingTimer.seconds()>.1) {
-//                    targetIntakeSpeed = 1;
-//                    actualIntakeSpeed = targetIntakeSpeed;
-//
-//                    leftSpinnerServoHardwareAction.setAndQueueAction(() -> {
-//                        leftSpinnerServo.setPower(1);
-//                    });
-//
-//                    intakingTimer.reset();
-//                    intakingState = IntakingState.INTAKING_IN_AGAIN;
-//                }
-//                break;
             case INTAKING_IN_AGAIN:
                 if (intakingTimer.seconds()>.25) {
                     intakingTimer.reset();
@@ -1163,9 +1178,9 @@ public class NewIntake extends SubSystem {
 
     public double getIntakeVerticalOffset() {
         if (getActualIntakePos() == NewIntake.IntakePos.UP.pos) {
-            return 8.3125;
+            return 8.45;
         } else if (getActualIntakePos() == NewIntake.IntakePos.SEARCH.pos) {
-            return 6.5;
+            return 6.65;
         } else {
             return 4.75;
         }

@@ -95,7 +95,7 @@ public class RRRight5plus1Auto extends LinearOpMode {
                         outtake.toClawPosition(NewOuttake.ClawPosition.OPEN);
                         notCanceled = false;
                     })
-                    .splineToConstantHeading(new Vector2d(-4.75, 30.5), Math.toRadians(270), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-45, 53))
+                    .splineToConstantHeading(new Vector2d(-4.75, 30.5), Math.toRadians(270), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-48, 55))
                     .build();
 
             @Override
@@ -214,7 +214,7 @@ public class RRRight5plus1Auto extends LinearOpMode {
                 .build();
 
         Action moveToGrab3 = drivetrain.drive.actionBuilder(new Pose2d(-4, 29.5, Math.toRadians(270)))
-                .afterTime(.6, () -> {
+                .afterTime(.75, () -> {
                     outtake.toOuttakeState(NewOuttake.ToOuttakeState.RETRACT_FROM_PLACE_BEHIND);
                 })
                 .afterTime(1.2, () -> {

@@ -222,7 +222,7 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
                     intakePoint = new Vector2d(cameraColumns* .75, cameraRows*.5);
                 }
 
-                intakePoint = searchField(blockVectorField, intakePoint, 64);
+                intakePoint = searchField(blockVectorField, intakePoint, 16);
 
                 if (safeGetMat(blockPullVectorField, intakePoint.getX(), intakePoint.getY()) < 140) {
                     intakePoint = searchField(blockVectorField, new Vector2d(cameraColumns*.5, cameraRows*.5), 64);
@@ -245,7 +245,7 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
                 setTargetBlockPixels(intakePoint);
 
 
-                Vector2d closestIntakePoint = findClosestEdge(rawBlockPullVectorField, intakePoint, 32, 175);
+                Vector2d closestIntakePoint = findClosestEdge(rawBlockPullVectorField, intakePoint, 16, 175);
                 setClosestTargetBlockPixels(closestIntakePoint);
 
 

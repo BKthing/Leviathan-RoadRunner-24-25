@@ -135,7 +135,7 @@ public class VisionSubsystem extends SubSystem {
 
     private Vector2d pixelToRelFieldCords(Vector2d targetBlockPixels) {
         double horizontalAngle = Math.toRadians(((targetBlockPixels.getY()-cameraRows/2)/cameraRows)*60.45786);
-        double verticalAngle = Math.toRadians(((cameraColumns/2-targetBlockPixels.getX())/cameraColumns)*44.36924 + 30.87+6);
+        double verticalAngle = Math.toRadians(((cameraColumns/2-targetBlockPixels.getX())/cameraColumns)*44.36924 + 30.87);
 
         double xOffset = Math.tan(verticalAngle)*(intakeHeight)+1;//Math.tan(verticalAngle)*(intakeHeight-1)+1
 

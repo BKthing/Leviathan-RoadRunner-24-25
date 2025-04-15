@@ -6,5 +6,7 @@ public class PassData {
 
     public static boolean verticalSlidesInitiated = false;
 
+    public static boolean checkingColorSensor = true;
+
 
 }

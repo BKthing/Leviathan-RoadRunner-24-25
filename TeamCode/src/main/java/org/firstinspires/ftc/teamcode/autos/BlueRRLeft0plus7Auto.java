@@ -44,7 +44,8 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
         RETRACTING,
         INTAKING_2,
         EJECTING,
-        RESETTING
+        RESETTING,
+        RESETTING_2
     }
 
     private double targetHeading = Math.toRadians(180);
@@ -145,7 +146,7 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
                 })
                 .afterTime(.5, () -> {//0
                     intake.setTargetSlidePos(13);
-                    extensionDistance = 15;
+                    extensionDistance = 15.5;
                     intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
 
                 })
@@ -164,11 +165,11 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
                     intake.setIntakingState(NewIntake.IntakingState.START_INTAKING);
                     autoTimer.reset();
                 })
-                .splineToConstantHeading(new Vector2d(58, 51.5), Math.toRadians(265))
+                .splineToConstantHeading(new Vector2d(58, 51.5), Math.toRadians(267))
 //                .splineToLinearHeading(new Pose2d(50.5, 50, Math.toRadians(270)), Math.toRadians(270))
                 .build();
 
-        Action moveToScoreBlock1 = drivetrain.drive.actionBuilder(new Pose2d(58, 51.5, Math.toRadians(265)))
+        Action moveToScoreBlock1 = drivetrain.drive.actionBuilder(new Pose2d(58, 51.5, Math.toRadians(267)))
                 .setTangent(Math.toRadians(84))
                 .splineToLinearHeading(new Pose2d(62, 54, Math.toRadians(265)), Math.toRadians(85))
                 .build();
@@ -212,7 +213,8 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
 
                     switch (parkState) {
                         case FIRST_LOOP:
-                            intake.toIntakeState(NewIntake.ToIntakeState.RETRACT_AND_STOP_INTAKING);
+                            intake.toIntakeState(NewIntake.ToIntakeState.RAISE_INTAKE);
+                            intake.setIntakeState(NewIntake.IntakeState.RETRACTING_INTAKE);
                             intake.setTargetSlidePos(0);
                             extensionDistance = 0;
 
@@ -242,7 +244,7 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
                             if ((drivetrain.getHoldPointError().minimizeHeading(Math.PI, -Math.PI).inRange(new com.reefsharklibrary.data.Pose2d(2, 8, Math.toRadians(8))))
                                     || autoTimer.seconds()>1.5) {
                                 outtake.toOuttakeState(NewOuttake.ToOuttakeState.TOUCH_BAR);
-                                drivetrain.holdPoint(new com.reefsharklibrary.data.Pose2d(21, 7, Math.toRadians(180)));
+                                drivetrain.holdPoint(new com.reefsharklibrary.data.Pose2d(19, 7, Math.toRadians(180)));
                                 parkState = ParkState.MOVE_TO_SUB_2;
 
                             }
@@ -258,7 +260,7 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
                     return false;
                 }
             };
-
+//hi brett
         drivetrain.drive.setPoseEstimate(new Pose2d(1, 1, 0));
         drivetrain.drive.pinpoint.update();
 
@@ -285,7 +287,7 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
                                 moveToGrabBlock1,
                                 intakeBlock,
                                 new InstantAction(() -> {
-                                    extensionDistance = 14;
+                                    extensionDistance = 15;
                                 }),
                                 new ParallelAction(
                                     moveToScoreBlock1,
@@ -350,8 +352,14 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
             this.action = action;
         }
 
+        boolean breakMotorsAct = false;
+
         @Override
         public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+            if (30 - totalAutoTimer.seconds() < 0.1 && !breakMotorsAct) {
+                drivetrain.breakMoters();
+                breakMotorsAct = true;
+            }
             return action.run(telemetryPacket) && ((30-totalAutoTimer.seconds())>timeThreshold);
         }
     }
@@ -363,10 +371,13 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
             if (intake.getPrevIntakingState() != NewIntake.IntakingState.INTAKING && intake.getPrevIntakingState() != NewIntake.IntakingState.START_INTAKING && intake.getPrevIntakingState() != NewIntake.IntakingState.SERVO_STALL_START_UNJAMMING && intake.getPrevIntakingState() != NewIntake.IntakingState.SERVO_STALL_UNJAMMING_SPIN_OUT) {
                 return false;
             } else if (autoTimer.seconds()>2) {
-                intake.toIntakeState(NewIntake.ToIntakeState.RETRACT);
+                intake.toIntakeState(NewIntake.ToIntakeState.RAISE_INTAKE);
+                extensionDistance = Math.max(extensionDistance-5, 0);
+                intake.setTargetSlidePos(extensionDistance);
+                autoTimer.reset();
                 return false;
             } else {
-                extensionDistance = MathUtil.clip(extensionDistance + 20 * loopTime, -.5, 18.5);
+                extensionDistance = MathUtil.clip(extensionDistance + 8 * loopTime, -.5, 18.5);
                 intake.setTargetSlidePos(extensionDistance);
                 return true;
             }
@@ -391,6 +402,7 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
                 if (outtake.getOuttakeState() == NewOuttake.OuttakeState.WAITING_PLACE_BEHIND || outtake.getFailedToTransfer()) {// || intake.getPrevIntakingState() == NewIntake.IntakingState.INTAKING
                     outtake.toClawPosition(NewOuttake.ClawPosition.OPEN);
                     autoTimer.reset();
+                    skipScore = false;
                     return false;
                 } else {
                     return true;
@@ -409,7 +421,7 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
                     intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
                     intake.setTargetSlidePos(extensionDistance);
                     return false;
-                } else if ((!intake.isBreakBeam() && (intake.getPrevIntakeState() == NewIntake.IntakeState.RETRACTING_INTAKE || intake.getPrevIntakeState() == NewIntake.IntakeState.RETRACTING || intake.getPrevIntakeState() == NewIntake.IntakeState.WAITING_AFTER_RETRACTING || intake.getPrevIntakeState() == NewIntake.IntakeState.WAITING_FOR_TRANSFER))) {
+                } else if ((!intake.isBreakBeam() && autoTimer.seconds() > .5 && (intake.getPrevIntakeState() == NewIntake.IntakeState.RETRACTING_INTAKE || intake.getPrevIntakeState() == NewIntake.IntakeState.RETRACTING || intake.getPrevIntakeState() == NewIntake.IntakeState.WAITING_AFTER_RETRACTING || intake.getPrevIntakeState() == NewIntake.IntakeState.WAITING_FOR_TRANSFER || intake.getPrevIntakeState() == NewIntake.IntakeState.INTAKING))) {
                     notExtended = false;
                     skipScore = true;
                     intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
@@ -474,7 +486,7 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
 
                     return true;
                 case DRIVING_TO_SUB_1:
-                    if ((drivetrain.getHoldPointError().minimizeHeading(Math.PI, -Math.PI).inRange(new com.reefsharklibrary.data.Pose2d(8, 8, Math.toRadians(8))))
+                    if ((drivetrain.getHoldPointError().minimizeHeading(Math.PI, -Math.PI).inRange(new com.reefsharklibrary.data.Pose2d(10, 10, Math.toRadians(10))))
                             || autoTimer.seconds()>1.5) {
 
                         drivetrain.holdPoint(holdPoint.toPose(Math.toRadians(180)));
@@ -483,7 +495,7 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
                     }
                     return true;
                 case DRIVING_TO_SUB_2:
-                    if (drivetrain.getHoldPointError().minimizeHeading(Math.PI, -Math.PI).inRange(new com.reefsharklibrary.data.Pose2d(2, 2, Math.toRadians(7))) && drivetrain.getPoseVelocity().inRange(new com.reefsharklibrary.data.Pose2d(6, 6, Math.toRadians(8)))) {
+                    if (drivetrain.getHoldPointError().minimizeHeading(Math.PI, -Math.PI).inRange(new com.reefsharklibrary.data.Pose2d(2, 2, Math.toRadians(7))) && drivetrain.getPoseVelocity().inRange(new com.reefsharklibrary.data.Pose2d(4, 4, Math.toRadians(6)))) {
                         drivetrain.cancelHoldPoint();
                         vision.recenter();
                         return  false;
@@ -498,8 +510,8 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
     public class GrabFromSubmersible implements Action {
         BlueRRLeft0plus7Auto.GrabFromSubmersibleState grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.SEARCHING;
 
-        boolean searching = false;
-        Action searchTurn;
+        double holdAngle = Math.toRadians(180);
+
 
         @Override
         public boolean run(@NonNull TelemetryPacket telemetryPacket) {
@@ -515,6 +527,7 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
                 return false;
             }
 
+
             switch (grabFromSubmersibleState) {
                 case SEARCHING:
                     if (vision.hasSample()) {
@@ -524,45 +537,30 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
 
                         grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.APPROACHING;
 
-                        extensionDistance = Math.max(vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset()-3.5, 2.5);//Math.max(extensionDistance+(vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset() - 4)*.125, 3);
+                        extensionDistance = Math.max(vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset()-1.7, 2.5);//Math.max(extensionDistance+(vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset() - 4)*.125, 3);
                         prevExtensionError = 0;
+                        intake.setTargetSlidePos(extensionDistance);
 
                         autoTimer.reset();
 
-                        intake.setTargetSlidePos(extensionDistance);
+                        // intake.setTargetSlidePos(extensionDistance);
 //                        grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.APPROACHING_HEADING;
                     } else if (autoTimer.seconds()>.5) {
-                        if (!searching) {
-                            drivetrain.cancelHoldPoint();
-                            searchTurn = drivetrain.drive.actionBuilder(MathUtil.toRoadRunnerPose(holdPoint.toPose(Math.toRadians(180))))
-                                    .turnTo(maxGrabAngle, new TurnConstraints(.1 *Math.PI, -2 *Math.PI, 2 *Math.PI))
-                                    .turnTo(minGrabAngle, new TurnConstraints(.1 *Math.PI, -2 *Math.PI, 2 *Math.PI))
-                                    .build();
-                            searching = true;
+                        if (holdAngle<Math.toRadians(182)) {
+                            holdAngle = Math.toRadians(190);
+                            drivetrain.holdPoint(holdPoint.toPose(holdAngle));
+                            grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.RESETTING;
+                            autoTimer.reset();
+                        } else {
+                            holdAngle = Math.toRadians(170);
+                            drivetrain.holdPoint(holdPoint.toPose(holdAngle));
+                            grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.RESETTING;
+                            autoTimer.reset();
                         }
-                        searching = searchTurn.run(telemetryPacket);
                     }
                     break;
                 case APPROACHING:
-                    double extensionError = (vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset() - intake.getTargetSlidePos() -3.5);
-
-                    double extensionErrorVel = (extensionError-prevExtensionError)/loopTime;
-
-                    extensionDistance = Math.max(extensionDistance + .15*extensionError - .0*extensionErrorVel, 2.5);//Math.max(extensionDistance+(vision.getSampleRobotDiff().getMagnitude() - 9.59029 - intake.getIntakeHorizontalOffset() - 4)*.125, 3);
-                    intake.setTargetSlidePos(extensionDistance);
-
-                    prevExtensionError = extensionError;
-
-                    //adjust holdPoint heading
-                    targetHeading = MathUtil.clip(Rotation.inRange(prevHeading+Rotation.inRange((vision.getTargetRobotPose().getHeading()-prevHeading), Math.PI, -Math.PI)*.15, 2*Math.PI, 0), minGrabAngle, maxGrabAngle);
-
-                    drivetrain.holdPoint(holdPoint.toPose(targetHeading));//, maxGrabAngle
-
-                    if (autoTimer.seconds()>1 || (drivetrain.getHoldPointError().minimizeHeading(Math.PI, -Math.PI).inRange(new com.reefsharklibrary.data.Pose2d(1, 1, Math.toRadians(3.5)))
-                            && drivetrain.getPoseVelocity().minimizeHeading(Math.PI, -Math.PI).inRange(new com.reefsharklibrary.data.Pose2d(.5, .5, Math.toRadians(.5))) && Math.abs(extensionError)<1 && Math.abs(extensionErrorVel)<.5)) {
-                        extensionDistance = intake.getTargetSlidePos()+1;
-                        intake.setTargetSlidePos(extensionDistance);
-
+                    if (intake.getTargetSlidePos()-intake.getActualSlidePos() < 3) {
                         intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
                         intake.setIntakingState(NewIntake.IntakingState.START_INTAKING);
                         autoTimer.reset();
@@ -571,7 +569,33 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
                     break;
                 case INTAKING_2:
 
-                    if (autoTimer.seconds() > 2) {
+                    if (autoTimer.seconds() > 1) {
+//                        double curHeading = drivetrain.getPoseEstimate().getHeading();
+//
+//                        if (curHeading > Math.toRadians(183)) {
+//                            targetHeading = Math.toRadians(176);
+//                            drivetrain.holdPoint(holdPoint.toPose(Math.toRadians(176)));
+//                        } else if (curHeading < Math.toRadians(177)) {
+//                            targetHeading = Math.toRadians(183);
+//                            drivetrain.holdPoint(holdPoint.toPose(Math.toRadians(185)));
+//                        } else {
+//                            targetHeading = Math.toRadians(175);
+//                            drivetrain.holdPoint(holdPoint.toPose(Math.toRadians(175)));
+//                        }
+//
+                        grabFromSubmersibleState = GrabFromSubmersibleState.RETRACTING;
+//                        intake.toIntakeState(NewIntake.ToIntakeState.SEARCH_POSITION_KEEP_SPINNING);
+//                        extensionDistance = NewIntake.HorizontalSlide.SEARCH_POS.length;
+                        autoTimer.reset();
+
+                    } else {
+                        extensionDistance = MathUtil.clip(extensionDistance + 6 * loopTime, -.5, 18.5);
+                        intake.setTargetSlidePos(extensionDistance);
+                    }
+
+                    break;
+                case RETRACTING:
+                    if (autoTimer.seconds() > .3) {
                         double curHeading = drivetrain.getPoseEstimate().getHeading();
 
                         if (curHeading > Math.toRadians(183)) {
@@ -586,11 +610,12 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
                         }
 
                         grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.RESETTING;
-                        intake.toIntakeState(NewIntake.ToIntakeState.SEARCH_POSITION);
+                        intake.toIntakeState(NewIntake.ToIntakeState.SEARCH_POSITION_KEEP_SPINNING);
                         extensionDistance = NewIntake.HorizontalSlide.SEARCH_POS.length;
-
-                    } else {
-                        extensionDistance = MathUtil.clip(extensionDistance + 6 * loopTime, -.5, 18.5);
+                        autoTimer.reset();
+                    }
+                    else {
+                        extensionDistance = MathUtil.clip(extensionDistance - 6 * loopTime, -.5, 18.5);
                         intake.setTargetSlidePos(extensionDistance);
                     }
 
@@ -607,7 +632,14 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
                     }
                     break;
                 case RESETTING:
-                    if (drivetrain.getHoldPointError().minimizeHeading(Math.PI, -Math.PI).inRange(new com.reefsharklibrary.data.Pose2d(1, 1, Math.toRadians(3.5))) && Math.abs(intake.getTargetSlidePos()-intake.getActualSlidePos())<1) {
+                    if ((drivetrain.getHoldPointError().minimizeHeading(Math.PI, -Math.PI).inRange(new com.reefsharklibrary.data.Pose2d(1, 1, Math.toRadians(3.5))) && Math.abs(intake.getTargetSlidePos()-intake.getActualSlidePos())<1) || autoTimer.seconds()>1) {
+                        grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.RESETTING_2;
+                        extensionDistance = 0;
+                        autoTimer.reset();
+                    }
+                    break;
+                case RESETTING_2:
+                    if (autoTimer.seconds()>.25) {
                         grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.SEARCHING;
                         extensionDistance = 0;
                         autoTimer.reset();
