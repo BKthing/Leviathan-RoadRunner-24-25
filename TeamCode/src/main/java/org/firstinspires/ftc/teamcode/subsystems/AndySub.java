@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.reefsharklibrary.data.MotorPowers;
@@ -9,6 +10,7 @@ import org.firstinspires.ftc.teamcode.util.threading.SubSystemData;
 
 import java.util.List;
 
+@Disabled
 public class AndySub extends SubSystem{
 
     DcMotorEx FrontLeft;

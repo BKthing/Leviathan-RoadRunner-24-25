@@ -109,7 +109,7 @@ public class NewOuttake extends SubSystem {
     public enum VerticalSlide {
         EXTRA_DOWN(-.3),
         DOWN(0),
-        TRANSFER(5.5),
+        TRANSFER(5.8),
         EXTRACT_FROM_TRANSFER(9),
         MIN_PASSTHROUGH_HEIGHT(8.5),
         SPECIMEN_PICKUP(3.7),
@@ -173,7 +173,7 @@ public class NewOuttake extends SubSystem {
         WAITING_FOR_HANG_DEPLOY(.363-.002),//.42
         // hello brett my king
         INIT(.37-.002),
-        TRANSFER(.437-.003+.008), //.444
+        TRANSFER(.436-.003+.008), //.444
         GRAB_BACK(.63 - .042-.002),
         WAIT_PLACE_BACK(.14 - .042-.002),
         PLACE_BACK(.12 - .042-.002),//.07
@@ -199,7 +199,7 @@ public class NewOuttake extends SubSystem {
         DOWN(.7618+.02),
         BACK(.9323+.02),
         BACK_ANGLED_DOWN(.83+.02),
-        BACK2(.3215+.02),
+        BACK2(.3219+.02),
         TRANSFER(.7108+.02), //.435
         FRONT_ANGLED_UP(.4644+.02),
 
@@ -234,9 +234,9 @@ public class NewOuttake extends SubSystem {
     public enum ClawPosition {
         EXTRA_OPEN(.47),//.47
         HANG_DEPLOY(.49),//.26
-        OPEN(.57),//.57
+        OPEN(.562),//.57
         PARTIALOPEN(.64),//.64
-        CLOSED(.85);//.78
+        CLOSED(.84);//.78
 //mmmmmmmmmmmmmmm
 //        EXTRA_OPEN(.6),
 //        OPEN(.4),

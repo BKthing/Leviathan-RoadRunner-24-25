@@ -5,6 +5,7 @@ import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.reefsharklibrary.misc.ElapsedTimer;
 
@@ -32,6 +33,10 @@ public class BlueTeleTest extends LinearOpMode {
     private Encoder verticalSlideEncoder, horizontalSlideEncoder;
 
     private TouchSensor breakBeam;
+
+    Gamepad prevGamepad1 = new Gamepad();
+
+    private ElapsedTimer stopHangTimer = new ElapsedTimer();
 
 
     @Override
@@ -70,13 +75,30 @@ public class BlueTeleTest extends LinearOpMode {
 
         drivetrain.drive.setPoseEstimate(new Pose2d(0, 0, 0));
 
-        while ( !isStopRequested()) {
+        boolean stopHang = false;
+        boolean loop = true;
+
+        while ( !isStopRequested()) {// && loop
             masterThread.unThreadedUpdate();
+
+//            if (gamepad1.start && gamepad1.back && !prevGamepad1.back) {
+//                stopHangTimer.reset();
+//                stopHang = true;
+//            }
+//
+//            if (stopHang && stopHangTimer.seconds()>1) {
+//                outtake.setVerticalSlidePower(.01);
+//                loop = false;
+//            }
+
+            prevGamepad1.copy(gamepad1);
 
             loopTime.setValue(loopTimer.milliSeconds());
 
             loopTimer.reset();
         }
+
+//        sleep(2000);
 
     }
 

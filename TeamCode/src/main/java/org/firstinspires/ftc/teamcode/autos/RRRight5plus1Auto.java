@@ -112,10 +112,10 @@ public class RRRight5plus1Auto extends LinearOpMode {
                 })
                 .splineToConstantHeading(new Vector2d(-10, 37), Math.toRadians(180), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-45, 65))
                 .splineToSplineHeading(new Pose2d(-25.5, 40.5, Math.toRadians(235)), Math.toRadians(180))
-                .turn(Math.toRadians(-75), new TurnConstraints(4 *Math.PI, -2 *Math.PI, 3 *Math.PI))//4, -2, 3
+                .turn(Math.toRadians(-78), new TurnConstraints(4 *Math.PI, -3.5 *Math.PI, 3.5 *Math.PI))//4, -2, 3
                 .afterTime(.1, () -> {
                     intake.toIntakeState(NewIntake.ToIntakeState.RAISE_INTAKE);
-                    intake.setTargetSlidePos(18.5);
+                    intake.setTargetSlidePos(16.8);
                 })
 
                 .setTangent(new com.reefsharklibrary.data.Vector2d(-35.5, 41.5).minus(new com.reefsharklibrary.data.Vector2d(-25.5, 40.5)).getDirection())
@@ -133,21 +133,21 @@ public class RRRight5plus1Auto extends LinearOpMode {
                 })
                 .setTangent(Math.toRadians(270))
                 .splineToSplineHeading(new Pose2d(-55.5, 12.5, Math.toRadians(270)), Math.toRadians(180), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-20, PARAMS.maxProfileAccel))
-                .splineToConstantHeading(new Vector2d(-58, 15.5), Math.toRadians(90), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(35))), new ProfileAccelConstraint(-20, PARAMS.maxProfileAccel))
-                .lineToYConstantHeading(49, new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-30, PARAMS.maxProfileAccel))
-                .splineToConstantHeading(new Vector2d(-55.5,60.9), Math.toRadians(80), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-30, PARAMS.maxProfileAccel))
+                .splineToConstantHeading(new Vector2d(-60.75, 15.5), Math.toRadians(90), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(35))), new ProfileAccelConstraint(-20, PARAMS.maxProfileAccel))
+                .lineToYConstantHeading(51, new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-30, PARAMS.maxProfileAccel))
+                .splineToConstantHeading(new Vector2d(-57,60.9), Math.toRadians(80), new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(PARAMS.maxWheelVel))), new ProfileAccelConstraint(-30, PARAMS.maxProfileAccel))
                 .build();
 
         MinVelConstraint moveToScoreVelConstraint = new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(120)));
         ProfileAccelConstraint moveToScoreAccelConstraint = new ProfileAccelConstraint(-65, 80);
 
         MinVelConstraint firstMoveToGrabVelConstraint = new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(70)));
-        ProfileAccelConstraint firstMoveToGrabAccelConstraint = new ProfileAccelConstraint(-30, 60);
+        ProfileAccelConstraint firstMoveToGrabAccelConstraint = new ProfileAccelConstraint(-28, 60);
 
         MinVelConstraint moveToGrabVelConstraint = new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(70)));
-        ProfileAccelConstraint moveToGrabAccelConstraint = new ProfileAccelConstraint(-35, 60);
+        ProfileAccelConstraint moveToGrabAccelConstraint = new ProfileAccelConstraint(-28, 55);
 
-        Action moveToScoreSpecimen2 = drivetrain.drive.actionBuilder(new Pose2d(-55.5, 60.9, Math.toRadians(270)))
+        Action moveToScoreSpecimen2 = drivetrain.drive.actionBuilder(new Pose2d(-57, 60.9, Math.toRadians(270)))
                 .waitSeconds(.2)
                 .setTangent(Math.toRadians(305))
                 .splineToConstantHeading(new Vector2d(-3.5, 29.5), Math.toRadians(300), moveToScoreVelConstraint, moveToScoreAccelConstraint)
@@ -200,15 +200,15 @@ public class RRRight5plus1Auto extends LinearOpMode {
                 .afterTime(.75, () -> {
                     outtake.toOuttakeState(NewOuttake.ToOuttakeState.WAIT_DROP_BEHIND);
                 })
-                .splineToConstantHeading(new Vector2d(-37, 59), Math.toRadians(90), firstMoveToGrabVelConstraint, firstMoveToGrabAccelConstraint)
+                .splineToConstantHeading(new Vector2d(-37, 58), Math.toRadians(90), firstMoveToGrabVelConstraint, firstMoveToGrabAccelConstraint)
                 .afterTime(.1, () -> {
                     outtake.toClawPosition(NewOuttake.ClawPosition.CLOSED);
                 })
-                .lineToY(60.3, moveToGrabVelConstraint, moveToGrabAccelConstraint)
+                .lineToY(59.5, moveToGrabVelConstraint, moveToGrabAccelConstraint)
                 .waitSeconds(.2)
                 .build();
 
-        Action moveToScoreSpecimen5 = drivetrain.drive.actionBuilder(new Pose2d(-37, 60.3, Math.toRadians(270)))
+        Action moveToScoreSpecimen5 = drivetrain.drive.actionBuilder(new Pose2d(-37, 59.5, Math.toRadians(270)))
                 .setTangent(new com.reefsharklibrary.data.Vector2d(-4, 29.5).minus(new com.reefsharklibrary.data.Vector2d(-37, 60.7)).getDirection())
                 .lineToY(29.5, moveToScoreVelConstraint, moveToScoreAccelConstraint)
                 .build();
@@ -220,7 +220,7 @@ public class RRRight5plus1Auto extends LinearOpMode {
                 .afterTime(1.2, () -> {
                     intake.setTargetSlidePos(15);
                     extensionDistance = 15;
-                    intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
+                    intake.toIntakeState(NewIntake.ToIntakeState.DROP_AND_INTAKE);
                     intake.setIntakingState(NewIntake.IntakingState.START_INTAKING);
                     autoTimer.reset();
                 })
@@ -235,7 +235,7 @@ public class RRRight5plus1Auto extends LinearOpMode {
                 .setTangent(Math.toRadians(180))
                 .afterTime(.4, () -> {
                     intake.setTargetSlidePos(18.5);
-                    intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
+                    intake.toIntakeState(NewIntake.ToIntakeState.DROP_AND_INTAKE);
                 })
                 .lineToXConstantHeading(-14, new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(80))), new ProfileAccelConstraint(-60, 75))
                 .build();
@@ -255,7 +255,7 @@ public class RRRight5plus1Auto extends LinearOpMode {
 
         masterThread.clearBulkCache();
 
-        intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
+        intake.toIntakeState(NewIntake.ToIntakeState.DROP_AND_INTAKE);
         outtake.toOuttakeState(NewOuttake.ToOuttakeState.FIRST_PLACE_FRONT);
 
         drivetrain.followPath(new SequentialAction(
@@ -293,7 +293,7 @@ public class RRRight5plus1Auto extends LinearOpMode {
                 new SleepAction(.3),
                 new InstantAction(() -> {
                     intake.setTargetSlidePos(18.5);
-                    intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
+                    intake.toIntakeState(NewIntake.ToIntakeState.DROP_AND_INTAKE);
                     intake.setIntakingState(NewIntake.IntakingState.START_INTAKING);
                 })
 //                moveToPark

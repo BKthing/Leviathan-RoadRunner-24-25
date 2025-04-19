@@ -24,7 +24,6 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import java.util.function.DoubleSupplier;
 
 import org.firstinspires.ftc.teamcode.PassData;
-import org.firstinspires.ftc.teamcode.teleops.DisableColorSensor;
 import org.firstinspires.ftc.teamcode.util.Encoder;
 import org.firstinspires.ftc.teamcode.util.MathUtil;
 import org.firstinspires.ftc.teamcode.util.threading.SubSystemData;
@@ -67,6 +66,7 @@ public class NewIntake extends SubSystem {
         INTAKING_SPIN_OUT,
         START_INTAKING_IN_AGAIN,
         INTAKING_IN_AGAIN,
+        INAKING_IN_AGAIN_AGAIN,
         FINISH_INTAKING,
         HOLDING_SAMPLE,
         MANUAL_EJECTING,
@@ -81,6 +81,8 @@ public class NewIntake extends SubSystem {
         UNJAMMING_SPIN_IN,
         UNJAMING_SPIN_IN_MORE,
         UNJAMMING_FINISH_SPIN_IN,
+
+        STOP_INTAKING,
 
         SERVO_STALL_START_UNJAMMING,
         SERVO_STALL_UNJAMMING_SPIN_OUT,
@@ -102,6 +104,8 @@ public class NewIntake extends SubSystem {
     private IntakingState newIntakingState = intakingState;
 
     private IntakingState prevIntakingState = intakingState;
+
+    private boolean ejectOnIntake = true;
 
     private boolean updateIntakingState = false;
 
@@ -125,6 +129,7 @@ public class NewIntake extends SubSystem {
 
     public enum ToIntakeState {
         EXTEND_THEN_DROP_INTAKE,
+        DROP_AND_INTAKE,
         DROP_INTAKE,
         DROP_INTAKE_AUTO_SHOVE_HEIGHT,
         RAISE_INTAKE,
@@ -487,7 +492,7 @@ public class NewIntake extends SubSystem {
              }
 
             if (gamepad2.left_bumper && !oldGamePad2.left_bumper) {
-                toIntakeState = ToIntakeState.DROP_INTAKE;
+                toIntakeState = ToIntakeState.DROP_AND_INTAKE;
                 intakingState = IntakingState.INTAKING;
                 targetIntakeSpeed = 1;
             } else if (gamepad2.left_trigger>.2 && oldGamePad2.left_trigger<=.2) {
@@ -515,10 +520,15 @@ public class NewIntake extends SubSystem {
 
                 toIntakeState = ToIntakeState.IDLE;
                 break;
-            case DROP_INTAKE:
+            case DROP_AND_INTAKE:
                 targetIntakePos = IntakePos.DOWN.pos;
 
                 intakeState = IntakeState.INTAKING;
+
+                toIntakeState = ToIntakeState.IDLE;
+                break;
+            case DROP_INTAKE:
+                targetIntakePos = IntakePos.DOWN.pos;
 
                 toIntakeState = ToIntakeState.IDLE;
                 break;
@@ -731,9 +741,11 @@ public class NewIntake extends SubSystem {
                 }
                 break;
             case INTAKING_A_LITTLE_MORE:
-                if (intakingTimer.seconds()>.2) {
-                    targetIntakeSpeed = Double.NaN;
-                    actualIntakeSpeed = targetIntakeSpeed;
+                //.12
+                if (intakingTimer.seconds()>.12) {
+                    if (ejectOnIntake) {
+                        targetIntakeSpeed = Double.NaN;
+                        actualIntakeSpeed = targetIntakeSpeed;
 
 //                    leftSpinnerServoHardwareAction.setAndQueueAction(() -> {
 //                        leftSpinnerServo.setPower(1);
@@ -742,12 +754,18 @@ public class NewIntake extends SubSystem {
                         rightSpinnerServo.setPower(-.8);
 //                    });
 
-                    intakingTimer.reset();
-                    intakingState = IntakingState.INTAKING_SPIN_OUT;
+                        intakingTimer.reset();
+                        intakingState = IntakingState.INTAKING_SPIN_OUT;
+                    } else {
+                        intakingState = IntakingState.INAKING_IN_AGAIN_AGAIN;
+                        intakingTimer.reset();
+                    }
+
                 }
                 break;
             case INTAKING_SPIN_OUT:
-                if (intakingTimer.seconds()>.14) {
+                //.18
+                if (intakingTimer.seconds()>.18) {
 //                    leftSpinnerServoHardwareAction.setAndQueueAction(() -> {
 //                        leftSpinnerServo.setPower(0);
 //                    });
@@ -762,7 +780,8 @@ public class NewIntake extends SubSystem {
                 }
                 break;
             case START_INTAKING_IN_AGAIN:
-                if (intakingTimer.seconds()>.1) {
+                //.12
+                if (intakingTimer.seconds()>.14) {
                     targetIntakeSpeed = 1;
                     actualIntakeSpeed = targetIntakeSpeed;
 
@@ -777,7 +796,18 @@ public class NewIntake extends SubSystem {
                 }
                 break;
             case INTAKING_IN_AGAIN:
+                //.25
                 if (intakingTimer.seconds()>.25) {
+                    intakingTimer.reset();
+                    intakingState = IntakingState.FINISH_INTAKING;
+
+                    //reset bc the spin out process provides a spike to servo current
+                    servoStallTimer.reset();
+                }
+                break;
+            case INAKING_IN_AGAIN_AGAIN:
+                //.1
+                if (intakingTimer.seconds()>.1) {
                     intakingTimer.reset();
                     intakingState = IntakingState.FINISH_INTAKING;
 
@@ -794,6 +824,10 @@ public class NewIntake extends SubSystem {
 
                     intakingState = IntakingState.HOLDING_SAMPLE;
                 }
+                break;
+            case STOP_INTAKING:
+                targetIntakeSpeed = 0;
+                intakingState = IntakingState.IDLE;
                 break;
             case START_EJECTING:
                 if (!isBreakBeam || intakingTimer.seconds()>1) {
@@ -883,7 +917,7 @@ public class NewIntake extends SubSystem {
                 intakingTimer.reset();
                 break;
             case SERVO_STALL_UNJAMMING_SPIN_OUT:
-                if ((stallCount == 0 && intakingTimer.seconds()>.05) || (stallCount == 1 && intakingTimer.seconds()>.1) || (intakingTimer.seconds()>.2)) {
+                if ((stallCount == 0 && intakingTimer.seconds()>.1) || (stallCount == 1 && intakingTimer.seconds()>.15) || (intakingTimer.seconds()>.2)) {
                     if (!teleOpControls || gamepad2.left_bumper) {
                         targetIntakeSpeed = 1;
 
@@ -1188,6 +1222,10 @@ public class NewIntake extends SubSystem {
 
     public IntakeState getPrevIntakeState() {
         return intakeState;
+    }
+
+    public void setEjectOnIntake(boolean ejectOnIntake) {
+        this.ejectOnIntake = ejectOnIntake;
     }
 
     public void overrideSpinOut() {

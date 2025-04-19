@@ -179,7 +179,7 @@ public class NewDrivetrain extends SubSystem {
         firstMoveToGrabAccelConstraint = new ProfileAccelConstraint(-28, 60);
 
         moveToGrabVelConstraint = new MinVelConstraint(Arrays.asList(drive.kinematics.new WheelVelConstraint(70)));
-        moveToGrabAccelConstraint = new ProfileAccelConstraint(-32, 60);
+        moveToGrabAccelConstraint = new ProfileAccelConstraint(-27, 60);
 
         pidPointController = new PIDPointController(RobotConstants.pointPID, RobotConstants.headingPID, RobotConstants.trackWidth, RobotConstants.lateralF, RobotConstants.headingF);
 
@@ -363,12 +363,12 @@ public class NewDrivetrain extends SubSystem {
                         followPath(new SequentialAction(
                                 //move to score
                                 drive.actionBuilder(new com.acmerobotics.roadrunner.Pose2d(-37, 60.7, Math.toRadians(270)))
-                                        .setTangent(new com.reefsharklibrary.data.Vector2d(-4, 29.5).minus(new com.reefsharklibrary.data.Vector2d(-37, 60.7)).getDirection())
+                                        .setTangent(new com.reefsharklibrary.data.Vector2d(-3.5, 29.5).minus(new com.reefsharklibrary.data.Vector2d(-37, 60.7)).getDirection())
                                         .lineToY(29.5, moveToScoreVelConstraint, moveToScoreAccelConstraint)
                                         .build(),
                                 new InstantAction(() -> outtake.toClawPosition(NewOuttake.ClawPosition.OPEN)),
                                 //move to grab
-                                drive.actionBuilder(new com.acmerobotics.roadrunner.Pose2d(-4, 29.5, Math.toRadians(270)))
+                                drive.actionBuilder(new com.acmerobotics.roadrunner.Pose2d(-3.5, 29.5, Math.toRadians(270)))
                                         .setTangent(Math.toRadians(115))
                                         .afterTime(.75, () -> {
                                             outtake.toOuttakeState(NewOuttake.ToOuttakeState.WAIT_DROP_BEHIND);

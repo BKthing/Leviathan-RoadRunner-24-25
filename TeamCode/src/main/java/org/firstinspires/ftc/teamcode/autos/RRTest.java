@@ -12,6 +12,7 @@ import com.acmerobotics.roadrunner.ProfileAccelConstraint;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.TouchSensor;
@@ -29,6 +30,7 @@ import org.firstinspires.ftc.teamcode.util.threading.MasterThread;
 
 import java.util.Arrays;
 
+@Disabled
 @Autonomous
 public class RRTest extends LinearOpMode {
 
@@ -121,7 +123,7 @@ public class RRTest extends LinearOpMode {
                 .afterTime(0, () -> {
 //                    intake.setTargetSlidePos(9);
 //                    extensionDistance = 9;
-                    intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
+                    intake.toIntakeState(NewIntake.ToIntakeState.DROP_AND_INTAKE);
                     intake.setIntakingState(NewIntake.IntakingState.START_INTAKING);
                     autoTimer.reset();
                 })
@@ -138,7 +140,7 @@ public class RRTest extends LinearOpMode {
                 .afterTime(0, () -> {
                     intake.setTargetSlidePos(10.5);
                     extensionDistance = 10.5;
-                    intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
+                    intake.toIntakeState(NewIntake.ToIntakeState.DROP_AND_INTAKE);
                     intake.setIntakingState(NewIntake.IntakingState.START_INTAKING);
                     autoTimer.reset();
                 })
@@ -156,7 +158,7 @@ public class RRTest extends LinearOpMode {
                 .afterTime(0, () -> {
                     intake.setTargetSlidePos(12.5);
                     extensionDistance = 12.5;
-                    intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
+                    intake.toIntakeState(NewIntake.ToIntakeState.DROP_AND_INTAKE);
                     intake.setIntakingState(NewIntake.IntakingState.START_INTAKING);
                     autoTimer.reset();
                 })
@@ -217,7 +219,7 @@ public class RRTest extends LinearOpMode {
                 .setTangent(Math.toRadians(180))
                 .afterTime(.6, () -> {
                     intake.setTargetSlidePos(18.5);
-                    intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
+                    intake.toIntakeState(NewIntake.ToIntakeState.DROP_AND_INTAKE);
                 })
                 .lineToXConstantHeading(14, new MinVelConstraint(Arrays.asList(drivetrain.drive.kinematics.new WheelVelConstraint(80))), new ProfileAccelConstraint(-60, 75))
                 .build();
@@ -381,7 +383,7 @@ public class RRTest extends LinearOpMode {
 
 
                     if (drivetrain.getHoldPointError().minimizeHeading(Math.PI, -Math.PI).inRange(new com.reefsharklibrary.data.Pose2d(1, 1, Math.toRadians(3.5)))) {
-                        intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
+                        intake.toIntakeState(NewIntake.ToIntakeState.DROP_AND_INTAKE);
                         intake.setIntakingState(NewIntake.IntakingState.START_INTAKING);
                         grabFromSubmersibleState = RRTest.GrabFromSubmersibleState.INTAKING;
                     }

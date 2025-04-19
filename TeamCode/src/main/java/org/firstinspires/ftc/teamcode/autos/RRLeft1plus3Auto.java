@@ -13,6 +13,7 @@ import com.acmerobotics.roadrunner.ProfileAccelConstraint;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.TouchSensor;
@@ -27,7 +28,7 @@ import org.firstinspires.ftc.teamcode.util.MathUtil;
 import org.firstinspires.ftc.teamcode.util.threading.MasterThread;
 
 import java.util.Arrays;
-
+@Disabled
 @Autonomous
 public class RRLeft1plus3Auto extends LinearOpMode {
     NewDrivetrain drivetrain;
@@ -96,7 +97,7 @@ public class RRLeft1plus3Auto extends LinearOpMode {
                 .afterTime(0, () -> {
                     intake.setTargetSlidePos(9);
                     extensionDistance = 9;
-                    intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
+                    intake.toIntakeState(NewIntake.ToIntakeState.DROP_AND_INTAKE);
                     intake.setIntakingState(NewIntake.IntakingState.START_INTAKING);
                     autoTimer.reset();
                 })
@@ -114,7 +115,7 @@ public class RRLeft1plus3Auto extends LinearOpMode {
                 .afterTime(0, () -> {
                     intake.setTargetSlidePos(11);
                     extensionDistance = 11;
-                    intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
+                    intake.toIntakeState(NewIntake.ToIntakeState.DROP_AND_INTAKE);
                     intake.setIntakingState(NewIntake.IntakingState.START_INTAKING);
                     autoTimer.reset();
                 })
@@ -132,7 +133,7 @@ public class RRLeft1plus3Auto extends LinearOpMode {
                 .afterTime(0, () -> {
                     intake.setTargetSlidePos(12);
                     extensionDistance = 12;
-                    intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
+                    intake.toIntakeState(NewIntake.ToIntakeState.DROP_AND_INTAKE);
                     intake.setIntakingState(NewIntake.IntakingState.START_INTAKING);
                     autoTimer.reset();
                 })
@@ -169,7 +170,7 @@ public class RRLeft1plus3Auto extends LinearOpMode {
 
         masterThread.clearBulkCache();
 
-        intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
+        intake.toIntakeState(NewIntake.ToIntakeState.DROP_AND_INTAKE);
         outtake.toOuttakeState(NewOuttake.ToOuttakeState.PLACE_FRONT);
 
         drivetrain.followPath(new SequentialAction(

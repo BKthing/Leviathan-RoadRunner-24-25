@@ -4,10 +4,7 @@ import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.MinVelConstraint;
 import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.ProfileAccelConstraint;
-import com.acmerobotics.roadrunner.TurnConstraints;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -25,8 +22,6 @@ import org.firstinspires.ftc.teamcode.subsystems.VisionSubsystem;
 import org.firstinspires.ftc.teamcode.util.Encoder;
 import org.firstinspires.ftc.teamcode.util.MathUtil;
 import org.firstinspires.ftc.teamcode.util.threading.MasterThread;
-
-import java.util.Arrays;
 
 @TeleOp
 public class CameraPickupTest extends LinearOpMode {
@@ -285,7 +280,7 @@ public class CameraPickupTest extends LinearOpMode {
                     break;
                 case APPROACHING:
                     if (intake.getTargetSlidePos()-intake.getActualSlidePos() < 3) {
-                        intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
+                        intake.toIntakeState(NewIntake.ToIntakeState.DROP_AND_INTAKE);
                         intake.setIntakingState(NewIntake.IntakingState.START_INTAKING);
                         autoTimer.reset();
                         grabFromSubmersibleState = BlueRRLeft0plus7Auto.GrabFromSubmersibleState.INTAKING_2;

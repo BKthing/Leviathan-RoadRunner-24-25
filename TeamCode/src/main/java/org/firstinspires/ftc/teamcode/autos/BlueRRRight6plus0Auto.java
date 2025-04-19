@@ -279,7 +279,7 @@ public class BlueRRRight6plus0Auto extends LinearOpMode {
                 .afterTime(1.2, () -> {
                     intake.setTargetSlidePos(15);
                     extensionDistance = 15;
-                    intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
+                    intake.toIntakeState(NewIntake.ToIntakeState.DROP_AND_INTAKE);
                     intake.setIntakingState(NewIntake.IntakingState.START_INTAKING);
                     autoTimer.reset();
                     outtake.outtakeState(NewOuttake.OuttakeState.IDLE);
@@ -301,7 +301,7 @@ public class BlueRRRight6plus0Auto extends LinearOpMode {
 
         masterThread.clearBulkCache();
 
-        intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
+        intake.toIntakeState(NewIntake.ToIntakeState.DROP_AND_INTAKE);
         outtake.toOuttakeState(NewOuttake.ToOuttakeState.FIRST_PLACE_FRONT);
 
         drivetrain.followPath(new SequentialAction(
@@ -404,7 +404,7 @@ public class BlueRRRight6plus0Auto extends LinearOpMode {
         @Override
         public boolean run(@NonNull TelemetryPacket telemetryPacket) {
             if (intake.getPrevIntakingState() != NewIntake.IntakingState.INTAKING && intake.getPrevIntakingState() != NewIntake.IntakingState.START_INTAKING && intake.getPrevIntakingState() != NewIntake.IntakingState.SERVO_STALL_START_UNJAMMING && intake.getPrevIntakingState() != NewIntake.IntakingState.SERVO_STALL_UNJAMMING_SPIN_OUT) {
-                intake.toIntakeState(NewIntake.ToIntakeState.DROP_INTAKE);
+                intake.toIntakeState(NewIntake.ToIntakeState.DROP_AND_INTAKE);
                 intake.setTargetSlidePos(18.5);
                 return false;
             } else {

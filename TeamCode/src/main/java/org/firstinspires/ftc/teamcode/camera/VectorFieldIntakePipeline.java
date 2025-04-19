@@ -37,16 +37,16 @@ public class VectorFieldIntakePipeline extends OpenCvPipeline {
 
     private boolean grabAllianceColor = false;
 
-    Scalar lowB = new Scalar(95, 80, 15);
+    Scalar lowB = new Scalar(95, 85, 8);
     Scalar highB = new Scalar(150, 255, 250);
 
-    Scalar lowR = new Scalar(0, 120, 25);
-    Scalar highR = new Scalar(14, 255, 255);
+    Scalar lowR = new Scalar(0, 125, 65);
+    Scalar highR = new Scalar(12, 255, 255);
 
-    Scalar lowR2 = new Scalar(198, 120, 25);
+    Scalar lowR2 = new Scalar(198, 110, 42);
     Scalar highR2 = new Scalar(255, 255, 255);
 
-    Scalar lowY = new Scalar(12, 100, 140);
+    Scalar lowY = new Scalar(11, 64, 80);
     Scalar highY = new Scalar(65, 255, 255);
 
     Scalar push = new Scalar(0);
