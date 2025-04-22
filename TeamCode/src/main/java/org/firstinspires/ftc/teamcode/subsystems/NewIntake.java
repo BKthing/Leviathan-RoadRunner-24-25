@@ -864,6 +864,7 @@ public class NewIntake extends SubSystem {
 
             case START_UNJAMMING:
                 intakingTimer.reset();
+                targetIntakePos = IntakePos.UP.pos;
                 targetIntakeSpeed = -1;
                 intakingState = IntakingState.UNJAMMING_SPIN_OUT;
                 break;

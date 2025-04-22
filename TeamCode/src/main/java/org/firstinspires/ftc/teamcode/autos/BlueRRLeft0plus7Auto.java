@@ -158,11 +158,11 @@ public class BlueRRLeft0plus7Auto extends LinearOpMode {
                     intake.setIntakingState(NewIntake.IntakingState.START_INTAKING);
                     autoTimer.reset();
                 })
-                .splineToConstantHeading(new Vector2d(58, 51.5), Math.toRadians(262))
+                .splineToConstantHeading(new Vector2d(58, 51.5), Math.toRadians(261))
 //                .splineToLinearHeading(new Pose2d(50.5, 50, Math.toRadians(270)), Math.toRadians(270))
                 .build();
 
-        Action moveToScoreBlock1 = drivetrain.drive.actionBuilder(new Pose2d(58, 51.5, Math.toRadians(262)))
+        Action moveToScoreBlock1 = drivetrain.drive.actionBuilder(new Pose2d(58, 51.5, Math.toRadians(261)))
                 .setTangent(Math.toRadians(84))
                 .splineToLinearHeading(new Pose2d(62, 54, Math.toRadians(265)), Math.toRadians(85))
                 .build();
