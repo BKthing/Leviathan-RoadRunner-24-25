@@ -197,7 +197,7 @@ public class NewOuttake extends SubSystem {
     public enum ClawPitch {
         LESS_DOWN(.7543+.02),
         DOWN(.7618+.02),
-        BACK(.9323+.02),
+        BACK(.931+.02),
         BACK_ANGLED_DOWN(.83+.02),
         BACK2(.3219+.02),
         TRANSFER(.7108+.02), //.435
